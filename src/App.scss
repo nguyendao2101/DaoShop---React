@@ -279,3 +279,97 @@ body {
     transform: rotate(360deg);
   }
 }
+
+.otp-info {
+  margin-bottom: 2rem;
+  text-align: center;
+
+  p {
+    margin-bottom: 0.5rem;
+    color: #ccc;
+    font-size: 16px;
+  }
+
+  strong {
+    color: $primary-color;
+    font-size: 18px;
+  }
+}
+
+.otp-input {
+  text-align: center;
+  font-size: 24px;
+  letter-spacing: 8px;
+  font-weight: bold;
+
+  &::placeholder {
+    letter-spacing: normal;
+    font-size: 16px;
+  }
+}
+
+.otp-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-top: 2rem;
+  width: 100%;
+  max-width: 300px;
+}
+
+.resend-btn {
+  background: none;
+  border: 1px solid $primary-color;
+  color: $primary-color;
+  padding: 12px 16px;
+  border-radius: $border-radius;
+  cursor: pointer;
+  transition: $transition;
+  font-size: 14px;
+
+  &:hover:not(:disabled) {
+    background-color: $primary-color;
+    color: black;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.back-btn {
+  background: none;
+  border: none;
+  color: #ccc;
+  padding: 8px 16px;
+  cursor: pointer;
+  font-size: 14px;
+  text-decoration: underline;
+
+  &:hover:not(:disabled) {
+    color: $text-white;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+// Message info style
+.message.info {
+  background-color: rgba(33, 150, 243, 0.1);
+  border: 1px solid #2196F3;
+  color: #2196F3;
+}
+
+// Button disabled state for OTP
+.auth-form__submit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+
+  &:hover {
+    transform: none;
+  }
+}

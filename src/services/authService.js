@@ -56,6 +56,53 @@ export const authService = {
                 error: error.response?.data || error.message
             }
         }
+    },
+
+    //verify OTP
+    verifyOtp: async (email, otp) => {
+        try {
+            console.log('📧 Verify OTP request:', { email, otp })
+
+            const response = await apiClient.post('/auth/verify-otp', {
+                email,
+                otp
+            })
+
+            console.log('Verify OTP response:', response.data)
+            return {
+                success: true,
+                data: response.data,
+                message: 'Xác thực email thành công!'
+            }
+        } catch (error) {
+            console.error('Verify OTP error:', error)
+            return {
+                success: false,
+                message: error.response?.data?.message || 'Mã OTP không đúng hoặc đã hết hạn!',
+                error: error.response?.data || error.message
+            }
+        }
+    },
+
+    //Resend OTP
+    resendOtp: async (email) => {
+        try {
+            console.log('Resend OTP request:', { email })
+            const response = await apiClient.post('/auth/resend-otp', { email })
+            console.log('Resend OTP response:', response.data)
+            return {
+                success: true,
+                data: response.data,
+                message: 'OTP đã được gửi lại thành công!'
+            }
+        } catch (error) {
+            console.error('Resend OTP error:', error)
+            return {
+                success: false,
+                message: error.response?.data?.message || 'Không thể gửi lại mã OTP!',
+                error: error.response?.data || error.message
+            }
+        }
     }
 }
 

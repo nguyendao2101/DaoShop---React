@@ -1,10 +1,13 @@
+// src/page/Auth.jsx
 import { useState } from 'react'
 import { ROUTES } from '../routes/index.js'
 import { authService } from '../services/authService.js'
+import VerifyOtp from './VerifyOtp.jsx'
 import '../App.scss'
 
 function Auth() {
     const [isLogin, setIsLogin] = useState(true)
+    const [showOtpVerification, setShowOtpVerification] = useState(false)
     const [formData, setFormData] = useState({
         userName: '',
         password: '',
@@ -12,7 +15,7 @@ function Auth() {
     })
     const [loading, setLoading] = useState(false)
     const [message, setMessage] = useState('')
-    const [messageType, setMessageType] = useState('') // 'success' or 'error'
+    const [messageType, setMessageType] = useState('')
 
     // Handle input changes
     const handleInputChange = (e) => {
@@ -21,7 +24,7 @@ function Auth() {
             ...prev,
             [name]: value
         }))
-        // Clear message when user types
+
         if (message) {
             setMessage('')
             setMessageType('')
@@ -53,12 +56,29 @@ function Auth() {
             let result
 
             if (isLogin) {
-                // Đăng nhập - gửi userName (có thể là email hoặc username)
+                // Đăng nhập
                 console.log('Login attempt with:', {
                     userName: formData.userName,
                     password: formData.password
                 })
                 result = await authService.login(formData.userName, formData.password)
+
+                if (result.success) {
+                    setMessage(result.message)
+                    setMessageType('success')
+
+                    if (result.data?.token) {
+                        localStorage.setItem('authToken', result.data.token)
+                        localStorage.setItem('userData', JSON.stringify(result.data.user || result.data))
+                    }
+
+                    setTimeout(() => {
+                        window.location.href = ROUTES.HOME
+                    }, 2000)
+                } else {
+                    setMessage(result.message)
+                    setMessageType('error')
+                }
             } else {
                 // Đăng ký
                 if (!formData.email.trim()) {
@@ -67,28 +87,21 @@ function Auth() {
                     setLoading(false)
                     return
                 }
+
                 result = await authService.register(formData.userName, formData.password, formData.email)
-            }
 
+                if (result.success) {
+                    setMessage(result.message)
+                    setMessageType('success')
 
-            if (result.success) {
-                setMessage(result.message)
-                setMessageType('success')
-
-                // Lưu token nếu có
-                if (result.data?.token) {
-                    localStorage.setItem('authToken', result.data.token)
-                    localStorage.setItem('userData', JSON.stringify(result.data.user || result.data))
+                    // Chuyển sang màn hình verify OTP sau 2 giây
+                    setTimeout(() => {
+                        setShowOtpVerification(true)
+                    }, 2000)
+                } else {
+                    setMessage(result.message)
+                    setMessageType('error')
                 }
-
-                // Redirect sau 2 giây
-                setTimeout(() => {
-                    window.location.href = ROUTES.HOME
-                }, 2000)
-
-            } else {
-                setMessage(result.message)
-                setMessageType('error')
             }
         } catch (error) {
             setMessage('Có lỗi xảy ra! Vui lòng thử lại.')
@@ -102,6 +115,7 @@ function Auth() {
     // Toggle between login and register
     const toggleMode = () => {
         setIsLogin(!isLogin)
+        setShowOtpVerification(false)
         setFormData({
             userName: '',
             password: '',
@@ -111,12 +125,38 @@ function Auth() {
         setMessageType('')
     }
 
+    // Handle OTP verification success
+    const handleOtpSuccess = (result) => {
+        console.log('OTP verification successful:', result)
+        // Redirect to home page
+        window.location.href = ROUTES.HOME
+    }
+
+    // Handle back from OTP verification
+    const handleOtpBack = () => {
+        setShowOtpVerification(false)
+        setMessage('')
+        setMessageType('')
+        // Giữ lại thông tin form để user có thể sửa
+    }
+
+    // Render OTP verification component
+    if (showOtpVerification) {
+        return (
+            <VerifyOtp
+                email={formData.email}
+                onSuccess={handleOtpSuccess}
+                onBack={handleOtpBack}
+            />
+        )
+    }
+
+    // Render main auth form
     return (
         <div className="App fade-in">
             <header className="App-header">
                 <h1>{isLogin ? 'Đăng nhập' : 'Đăng ký'}</h1>
 
-                {/* Message display */}
                 {message && (
                     <div className={`message ${messageType}`}>
                         {message}
@@ -127,12 +167,13 @@ function Auth() {
                     <input
                         type="text"
                         name="userName"
-                        placeholder="Tên đăng nhập"
+                        placeholder={isLogin ? "Email hoặc tên đăng nhập" : "Tên đăng nhập"}
                         value={formData.userName}
                         onChange={handleInputChange}
                         className="auth-form__input"
                         required
                         disabled={loading}
+                        autoComplete={isLogin ? "username" : "new-password"}
                     />
 
                     {!isLogin && (
@@ -145,6 +186,7 @@ function Auth() {
                             className="auth-form__input"
                             required
                             disabled={loading}
+                            autoComplete="email"
                         />
                     )}
 
@@ -158,6 +200,7 @@ function Auth() {
                         required
                         minLength="6"
                         disabled={loading}
+                        autoComplete={isLogin ? "current-password" : "new-password"}
                     />
 
                     <button
@@ -168,6 +211,14 @@ function Auth() {
                         {loading ? 'Đang xử lý...' : (isLogin ? 'Đăng nhập' : 'Đăng ký')}
                     </button>
                 </form>
+
+                {isLogin && (
+                    <div className="login-hint">
+                        <small style={{ color: '#888', fontSize: '14px' }}>
+                            💡 Bạn có thể đăng nhập bằng email hoặc tên đăng nhập
+                        </small>
+                    </div>
+                )}
 
                 <div className="text-center mt-1">
                     <button
