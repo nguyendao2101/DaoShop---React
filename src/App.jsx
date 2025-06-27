@@ -1,3 +1,4 @@
+// File này có thể xóa hoặc giữ làm component khác
 import logo from './logo.svg'
 import './App.css'
 
@@ -7,24 +8,8 @@ function App() {
       <header className="App-header">
         <img src={logo} className="App-logo" alt="logo" />
         <p>
-          Edit <code>src/App.jsx</code> and save to reload.
+          App Component - Không sử dụng trong routing hiện tại
         </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-        <a
-          className="App-link"
-          href="https://tanstack.com"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn TanStack
-        </a>
       </header>
     </div>
   )
