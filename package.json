@@ -10,11 +10,13 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@reduxjs/toolkit": "^2.8.2",
     "@tanstack/react-router": "^1.121.2",
     "@tanstack/react-router-devtools": "^1.121.2",
     "axios": "^1.10.0",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react-dom": "^19.0.0",
+    "react-redux": "^9.2.0"
   },
   "devDependencies": {
     "@testing-library/dom": "^10.4.0",

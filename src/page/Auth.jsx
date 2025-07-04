@@ -1,20 +1,36 @@
 // src/page/Auth.jsx
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useDispatch, useSelector } from 'react-redux'
 import { ROUTES } from '../routes/index.js'
-import { authService } from '../services/authService.js'
+import { loginUser, registerUser, clearMessage, clearError } from '../store/slices/authSlice.js'
 import VerifyOtp from '../components/layout/VerifyOtp.jsx'
 
 function Auth() {
+    const dispatch = useDispatch()
+    const {
+        isLoading,
+        error,
+        message,
+        isAuthenticated,
+        needsVerification,
+        registrationEmail
+    } = useSelector((state) => state.auth)
+
     const [isLogin, setIsLogin] = useState(true)
-    const [showOtpVerification, setShowOtpVerification] = useState(false)
     const [formData, setFormData] = useState({
         userName: '',
         password: '',
         email: ''
     })
-    const [loading, setLoading] = useState(false)
-    const [message, setMessage] = useState('')
-    const [messageType, setMessageType] = useState('')
+
+    // Handle authentication success
+    useEffect(() => {
+        if (isAuthenticated && !needsVerification) {
+            setTimeout(() => {
+                window.location.href = ROUTES.HOME
+            }, 2000)
+        }
+    }, [isAuthenticated, needsVerification])
 
     // Handle input changes
     const handleInputChange = (e) => {
@@ -24,136 +40,100 @@ function Auth() {
             [name]: value
         }))
 
-        if (message) {
-            setMessage('')
-            setMessageType('')
+        // Clear messages when user types
+        if (error || message) {
+            dispatch(clearMessage())
+            dispatch(clearError())
         }
     }
 
     // Handle form submission
     const handleSubmit = async (e) => {
         e.preventDefault()
-        setLoading(true)
-        setMessage('')
 
         // Validate inputs
         if (!formData.userName.trim()) {
-            setMessage('Vui lòng nhập email hoặc tên đăng nhập')
-            setMessageType('error')
-            setLoading(false)
             return
         }
 
         if (!formData.password.trim()) {
-            setMessage('Vui lòng nhập mật khẩu')
-            setMessageType('error')
-            setLoading(false)
             return
         }
 
-        try {
-            let result
-
-            if (isLogin) {
-                // Đăng nhập
-                result = await authService.login(formData.userName, formData.password)
-
-                if (result.success) {
-                    setMessage(result.message)
-                    setMessageType('success')
-
-                    if (result.data?.token) {
-                        localStorage.setItem('authToken', result.data.token)
-                        localStorage.setItem('userData', JSON.stringify(result.data.user || result.data))
-                    }
-
-                    setTimeout(() => {
-                        window.location.href = ROUTES.HOME
-                    }, 2000)
-                } else {
-                    setMessage(result.message)
-                    setMessageType('error')
-                }
-            } else {
-                // Đăng ký
-                if (!formData.email.trim()) {
-                    setMessage('Vui lòng nhập email để đăng ký')
-                    setMessageType('error')
-                    setLoading(false)
-                    return
-                }
-
-                result = await authService.register(formData.userName, formData.password, formData.email)
-
-                if (result.success) {
-                    setMessage(result.message)
-                    setMessageType('success')
-
-                    // Chuyển sang màn hình verify OTP sau 2 giây
-                    setTimeout(() => {
-                        setShowOtpVerification(true)
-                    }, 2000)
-                } else {
-                    setMessage(result.message)
-                    setMessageType('error')
-                }
+        if (isLogin) {
+            // Đăng nhập
+            dispatch(loginUser({
+                userName: formData.userName,
+                password: formData.password
+            }))
+        } else {
+            // Đăng ký
+            if (!formData.email.trim()) {
+                return
             }
-        } catch (error) {
-            setMessage('Có lỗi xảy ra! Vui lòng thử lại.')
-            setMessageType('error')
-            console.error('Auth error:', error)
-        } finally {
-            setLoading(false)
+
+            dispatch(registerUser({
+                userName: formData.userName,
+                password: formData.password,
+                email: formData.email
+            }))
         }
     }
 
     // Toggle between login and register
     const toggleMode = () => {
         setIsLogin(!isLogin)
-        setShowOtpVerification(false)
         setFormData({
             userName: '',
             password: '',
             email: ''
         })
-        setMessage('')
-        setMessageType('')
+        dispatch(clearMessage())
+        dispatch(clearError())
     }
 
     // Handle OTP verification success
-    const handleOtpSuccess = (result) => {
-        console.log('OTP verification successful:', result)
-        // Redirect to home page
-        window.location.href = ROUTES.HOME
+    const handleOtpSuccess = () => {
+        // Redux sẽ tự động handle redirect thông qua useEffect
     }
 
     // Handle back from OTP verification
     const handleOtpBack = () => {
-        setShowOtpVerification(false)
-        setMessage('')
-        setMessageType('')
+        dispatch(clearMessage())
+        dispatch(clearError())
+    }
+
+    // Render OTP verification component
+    if (needsVerification && registrationEmail) {
+        return (
+            <VerifyOtp
+                email={registrationEmail}
+                onSuccess={handleOtpSuccess}
+                onBack={handleOtpBack}
+            />
+        )
+    }
+
+    // Get message type
+    const getMessageType = () => {
+        if (error) return 'error'
+        if (message) {
+            if (message.includes('thành công')) return 'success'
+            return 'info'
+        }
+        return ''
     }
 
     // Get message classes
     const getMessageClass = () => {
         const baseClass = 'message'
-        switch (messageType) {
+        const type = getMessageType()
+        switch (type) {
             case 'success': return `${baseClass} message-success`
             case 'error': return `${baseClass} message-error`
             case 'info': return `${baseClass} message-info`
             default: return baseClass
         }
-    }
-
-    // Render OTP verification component
-    if (showOtpVerification) {
-        return (
-            <VerifyOtp
-                email={formData.email}
-                onSuccess={handleOtpSuccess}
-                onBack={handleOtpBack}
-            />
-        )
     }
 
     // Render main auth form
@@ -164,9 +144,9 @@ function Auth() {
                     {isLogin ? 'Đăng nhập' : 'Đăng ký'}
                 </h1>
 
-                {message && (
+                {(message || error) && (
                     <div className={getMessageClass()}>
-                        {message}
+                        {error || message}
                     </div>
                 )}
 
@@ -179,8 +159,7 @@ function Auth() {
                         onChange={handleInputChange}
                         className="form-input"
                         required
-                        disabled={loading}
-                        autoComplete={isLogin ? "username" : "new-password"}
+                        disabled={isLoading}
                     />
 
                     {!isLogin && (
@@ -192,8 +171,7 @@ function Auth() {
                             onChange={handleInputChange}
                             className="form-input"
                             required
-                            disabled={loading}
-                            autoComplete="email"
+                            disabled={isLoading}
                         />
                     )}
 
@@ -206,16 +184,15 @@ function Auth() {
                         className="form-input"
                         required
                         minLength="6"
-                        disabled={loading}
-                        autoComplete={isLogin ? "current-password" : "new-password"}
+                        disabled={isLoading}
                     />
 
                     <button
                         type="submit"
-                        className={`btn-primary w-full ${loading ? 'btn-loading' : ''}`}
-                        disabled={loading}
+                        className={`btn-primary w-full ${isLoading ? 'btn-loading' : ''}`}
+                        disabled={isLoading}
                     >
-                        {loading ? 'Đang xử lý...' : (isLogin ? 'Đăng nhập' : 'Đăng ký')}
+                        {isLoading ? 'Đang xử lý...' : (isLogin ? 'Đăng nhập' : 'Đăng ký')}
                     </button>
                 </form>
 
@@ -231,17 +208,14 @@ function Auth() {
                     <button
                         onClick={toggleMode}
                         className="auth-form-toggle"
-                        disabled={loading}
+                        disabled={isLoading}
                     >
                         {isLogin ? 'Chưa có tài khoản? Đăng ký' : 'Đã có tài khoản? Đăng nhập'}
                     </button>
                 </div>
 
                 <div className="text-center mt-4">
-                    <a
-                        className="app-link"
-                        href={ROUTES.HOME}
-                    >
+                    <a className="app-link" href={ROUTES.HOME}>
                         ← Về trang chủ
                     </a>
                 </div>
