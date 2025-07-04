@@ -1,8 +1,9 @@
+// src/main.jsx
 import { StrictMode } from 'react'
 import ReactDOM from 'react-dom/client'
 import { RouterProvider } from '@tanstack/react-router'
 
-import './App.scss'  // Đổi từ styles.css thành App.scss
+import './assets/styles/index.css'  // Đảm bảo đúng path
 import reportWebVitals from './reportWebVitals.js'
 import { router } from './routes/routers.jsx'
 

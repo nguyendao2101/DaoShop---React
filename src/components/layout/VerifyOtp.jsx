@@ -1,8 +1,7 @@
 // src/components/VerifyOtp.jsx
-import { useState } from 'react'
-import { ROUTES } from '../routes/index.js'
-import { authService } from '../services/authService.js'
-import '../App.scss'
+import { useState, useEffect } from 'react'
+import { ROUTES } from '../../routes/index.js'
+import { authService } from '../../services/authService.js'
 
 function VerifyOtp({ email, onSuccess, onBack }) {
     const [otp, setOtp] = useState('')
@@ -13,7 +12,6 @@ function VerifyOtp({ email, onSuccess, onBack }) {
 
     // Handle OTP input change
     const handleOtpChange = (e) => {
-        // Chỉ cho phép nhập số và giới hạn 6 ký tự
         const numericValue = e.target.value.replace(/[^0-9]/g, '').slice(0, 6)
         setOtp(numericValue)
 
@@ -57,19 +55,16 @@ function VerifyOtp({ email, onSuccess, onBack }) {
                 setMessage(result.message)
                 setMessageType('success')
 
-                // Lưu token nếu có
                 if (result.data?.token) {
                     localStorage.setItem('authToken', result.data.token)
                     localStorage.setItem('userData', JSON.stringify(result.data.user || result.data))
                 }
 
-                // Gọi callback success
                 if (onSuccess) {
                     setTimeout(() => {
                         onSuccess(result)
                     }, 1500)
                 } else {
-                    // Fallback redirect
                     setTimeout(() => {
                         window.location.href = ROUTES.HOME
                     }, 2000)
@@ -119,31 +114,45 @@ function VerifyOtp({ email, onSuccess, onBack }) {
         if (onBack) {
             onBack()
         } else {
-            // Fallback
             window.history.back()
         }
     }
 
     // Start cooldown when component mounts
-    useState(() => {
+    useEffect(() => {
         startResendCooldown()
     }, [])
 
+    // Get message classes
+    const getMessageClass = () => {
+        const baseClass = 'message'
+        switch (messageType) {
+            case 'success': return `${baseClass} message-success`
+            case 'error': return `${baseClass} message-error`
+            case 'info': return `${baseClass} message-info`
+            default: return baseClass
+        }
+    }
+
     return (
-        <div className="App fade-in">
-            <header className="App-header">
-                <h1>Xác thực Email</h1>
+        <div className="otp-container fade-in">
+            <header className="app-header md:max-w-lg">
+                <h1 className="text-4xl md:text-5xl font-bold mb-8 text-primary">
+                    Xác thực Email
+                </h1>
 
                 <div className="otp-info">
-                    <p>Mã OTP đã được gửi đến:</p>
-                    <strong>{email}</strong>
+                    <p className="mb-2 text-gray-300 text-base">
+                        Mã OTP đã được gửi đến:
+                    </p>
+                    <strong className="otp-email">{email}</strong>
                     <p className="otp-note">
                         Vui lòng kiểm tra hộp thư và thư mục spam
                     </p>
                 </div>
 
                 {message && (
-                    <div className={`message ${messageType}`}>
+                    <div className={getMessageClass()}>
                         {message}
                     </div>
                 )}
@@ -156,7 +165,7 @@ function VerifyOtp({ email, onSuccess, onBack }) {
                             placeholder="000000"
                             value={otp}
                             onChange={handleOtpChange}
-                            className="auth-form__input otp-input"
+                            className="form-input-otp"
                             required
                             disabled={loading}
                             maxLength="6"
@@ -170,7 +179,7 @@ function VerifyOtp({ email, onSuccess, onBack }) {
 
                     <button
                         type="submit"
-                        className="auth-form__submit"
+                        className={`btn-primary w-full ${loading ? 'btn-loading' : ''}`}
                         disabled={loading || otp.length !== 6}
                     >
                         {loading ? 'Đang xác thực...' : 'Xác thực OTP'}
@@ -200,12 +209,14 @@ function VerifyOtp({ email, onSuccess, onBack }) {
 
                 <div className="otp-help">
                     <details className="help-details">
-                        <summary>Không nhận được mã OTP?</summary>
+                        <summary className="help-summary">
+                            Không nhận được mã OTP?
+                        </summary>
                         <div className="help-content">
-                            <p>• Kiểm tra thư mục spam/junk</p>
-                            <p>• Đảm bảo email chính xác</p>
-                            <p>• Chờ tối đa 2-3 phút</p>
-                            <p>• Thử gửi lại mã OTP</p>
+                            <p className="help-text">• Kiểm tra thư mục spam/junk</p>
+                            <p className="help-text">• Đảm bảo email chính xác</p>
+                            <p className="help-text">• Chờ tối đa 2-3 phút</p>
+                            <p className="help-text">• Thử gửi lại mã OTP</p>
                         </div>
                     </details>
                 </div>
