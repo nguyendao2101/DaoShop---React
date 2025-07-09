@@ -5,6 +5,7 @@ import { ROUTES } from '../routes/index.js'
 import { logout } from '../store/slices/authSlice.js'
 import Header from '../components/layout/Header.jsx'
 import Footer from '../components/layout/Footer.jsx'
+import banner from '../assets/images/banner.png';
 
 function Home() {
     return (
@@ -145,9 +146,9 @@ function Home() {
                                 <div className="absolute inset-0 bg-black bg-opacity-40 group-hover:bg-opacity-20 transition-all"></div>
                                 <div className="relative z-10 h-full flex items-center justify-center text-center p-8">
                                     <div>
-                                        <h3 className="text-3xl font-bold mb-4">Bộ sưu tập Cưới</h3>
+                                        <h3 className="text-3xl font-bold mb-4">Bộ sưu tập Only You</h3>
                                         <p className="text-lg text-gray-300 mb-6">
-                                            Trang sức hoàn hảo cho ngày trọng đại
+                                            Trang sức hoàn hảo cho riêng cho bạn
                                         </p>
                                         <span className="inline-block bg-primary text-black px-6 py-3 rounded-lg font-semibold">
                                             Khám phá ngay
@@ -161,7 +162,7 @@ function Home() {
                                 <div className="absolute inset-0 bg-black bg-opacity-40 group-hover:bg-opacity-20 transition-all"></div>
                                 <div className="relative z-10 h-full flex items-center justify-center text-center p-8">
                                     <div>
-                                        <h3 className="text-3xl font-bold mb-4">Bộ sưu tập Luxury</h3>
+                                        <h3 className="text-3xl font-bold mb-4">Bộ sưu tập Tuyệt Tác</h3>
                                         <p className="text-lg text-gray-300 mb-6">
                                             Những món trang sức xa xỉ nhất
                                         </p>
@@ -211,7 +212,7 @@ function Home() {
 
                             <div className="relative">
                                 <div className="aspect-square bg-gradient-to-br from-primary/20 to-blue-400/20 rounded-lg flex items-center justify-center">
-                                    <span className="text-9xl">💎</span>
+                                    <img src={banner} alt="" />
                                 </div>
                             </div>
                         </div>
@@ -237,7 +238,7 @@ function Home() {
                                     </svg>
                                 </div>
                                 <h3 className="text-xl font-semibold mb-2">Địa chỉ</h3>
-                                <p className="text-gray-400">123 Đường ABC, Quận 1, TP.HCM</p>
+                                <p className="text-gray-400">Liên khu 5, Phùng Khoang, Hà Nội</p>
                             </div>
 
                             <div className="text-center p-8 bg-gray-900 rounded-lg border border-gray-800">
@@ -257,7 +258,7 @@ function Home() {
                                     </svg>
                                 </div>
                                 <h3 className="text-xl font-semibold mb-2">Email</h3>
-                                <p className="text-gray-400">contact@nguyendao.com</p>
+                                <p className="text-gray-400">nguyendao21012002@gmail.com</p>
                             </div>
                         </div>
                     </div>

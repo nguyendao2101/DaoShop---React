@@ -12,6 +12,8 @@ import {
     clearError
 } from '../store/slices/authSlice.js'
 import VerifyOtp from '../components/layout/VerifyOtp.jsx'
+import logoGG from '../assets/images/logoGG.png'
+
 
 function Auth() {
     const dispatch = useDispatch()
@@ -182,7 +184,7 @@ function Auth() {
                         disabled={isLoading}
                         className="w-full bg-white text-gray-700 border border-gray-300 rounded-lg px-4 py-3 flex items-center justify-center space-x-3 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium"
                     >
-                        <img src="../assets/images/logoGG.png" alt="Google" className="w-5 h-5" />
+                        <img src={logoGG} alt="Google" className="w-5 h-5" />
                         <span>Đăng nhập với Google</span>
                     </button>
                 </div>

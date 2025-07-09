@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { ROUTES } from '../../routes/index.js'
 import { logout } from '../../store/slices/authSlice.js'
+import logoApp from '../../assets/images/logoApp.png'
 
 function Header() {
     const dispatch = useDispatch()
@@ -25,9 +26,11 @@ function Header() {
                     {/* Logo */}
                     <div className="flex items-center">
                         <a href={ROUTES.HOME} className="flex items-center space-x-2">
-                            <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
-                                <span className="text-black font-bold text-sm">ND</span>
-                            </div>
+                            <img
+                                src={logoApp}
+                                alt="Nguyen Dao Jewelry Logo"
+                                className="w-8 h-8 object-contain"
+                            />
                             <span className="text-xl font-bold text-primary">Nguyen Dao Jewelry</span>
                         </a>
                     </div>
