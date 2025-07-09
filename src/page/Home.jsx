@@ -1,49 +1,270 @@
 // src/page/Home.jsx
-import { useDispatch, useSelector } from 'react-redux'
-import logo from '../logo.svg'
-import { ROUTES } from '../routes/index.js'
-import { logout } from '../store/slices/authSlice.js'
+import { useState, useEffect } from 'react'
 import Header from '../components/layout/Header.jsx'
 import Footer from '../components/layout/Footer.jsx'
 import banner from '../assets/images/banner.png';
+import banner77 from '../assets/images/banner_7_7.png';
+import bannerEGift from '../assets/images/banner_e_gift.png';
+import bannerShip3Hours from '../assets/images/banner_ship_3_hours.png';
+import collectionChoMe from '../assets/images/collection_chot_me.png';
+import collectionOnlyYou from '../assets/images/collection_only_you.png';
+import collectionCombo from '../assets/images/collection_combo.png';
+import collectionNormal from '../assets/images/collection_normal.png';
+import collectionQuyPhai from '../assets/images/collection_quy_phai.png';
+import collectionTuyetTac from '../assets/images/collection_tuyet_tac.png';
+import { useDispatch, useSelector } from 'react-redux';
+import {
+    fetchFeaturedProducts,
+    fetchAllProducts,
+    selectFeaturedProducts,
+    selectFeaturedLoading,
+    selectFeaturedError,
+    selectAllProducts
+} from '../store/slices/productSlice';
+import ProductCard from '../components/layout/ProductCard';
+
 
 function Home() {
+    const dispatch = useDispatch();
+    const [currentSlide, setCurrentSlide] = useState(0)
+    // Redux selectors
+    const featuredProducts = useSelector(selectFeaturedProducts);
+    const featuredLoading = useSelector(selectFeaturedLoading);
+    const featuredError = useSelector(selectFeaturedError);
+    const allProducts = useSelector(selectAllProducts);
+
+    useEffect(() => {
+        dispatch(fetchFeaturedProducts(3));
+        dispatch(fetchAllProducts());
+    }, [dispatch]);
+    const bannerImages = [
+        {
+            src: banner77,
+            title: "Ưu đãi ngày đôi 7/7",
+            subtitle: "Bừng sáng diện mạo - Tỏa phong cách riêng",
+            cta: "Khám phá ngay"
+        },
+        {
+            src: bannerEGift,
+            title: "Phiếu quà tặng điện tử E-Gift",
+            subtitle: "Món quà thiết thực - Tiện lợi, hợp lý",
+            cta: "Mua ngay"
+        },
+        {
+            src: bannerShip3Hours,
+            title: "Giao hàng NguyenDaoFast",
+            subtitle: "Sở hữu trang sức yêu thích chỉ trong 3 giờ",
+            cta: "Xem thêm"
+        }
+    ]
+
+    const galleryImages = [
+        {
+            src: collectionChoMe,
+            title: "Bộ sưu tập Chót Mê",
+            category: "Chót Mê"
+        },
+        {
+            src: collectionOnlyYou,
+            title: "Bộ sưu tập Only You",
+            category: "OnlyYou"
+        },
+        {
+            src: collectionCombo,
+            title: "Combo Trang Sức",
+            category: "Combo"
+        },
+        {
+            src: collectionNormal,
+            title: "Bộ sưu tập thường",
+            category: "Normal"
+        },
+        {
+            src: collectionQuyPhai,
+            title: "Bộ sưu tập Quý Phái",
+            category: "QuyPhai"
+        },
+        {
+            src: collectionTuyetTac,
+            title: "Bộ sưu tập Tuyệt Tác",
+            category: "TuyetTacTrangSuc"
+        }
+    ]
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+            setCurrentSlide((prev) => (prev + 1) % bannerImages.length)
+        }, 3000) // 3 giây
+
+        return () => clearInterval(interval)
+    }, [bannerImages.length])
+
+    const goToSlide = (index) => {
+        setCurrentSlide(index)
+    }
+
+    const nextSlide = () => {
+        setCurrentSlide((prev) => (prev + 1) % bannerImages.length)
+    }
+
+    const prevSlide = () => {
+        setCurrentSlide((prev) => (prev - 1 + bannerImages.length) % bannerImages.length)
+    }
     return (
         <div className="min-h-screen bg-black text-white flex flex-col">
             <Header />
 
             <main className="flex-1">
                 {/* Hero Section */}
-                <section className="relative h-screen flex items-center justify-center bg-gradient-to-br from-black via-gray-900 to-black">
-                    <div className="absolute inset-0 bg-black bg-opacity-50"></div>
-                    <div className="relative z-10 text-center max-w-4xl mx-auto px-4">
-                        <h1 className="text-5xl md:text-7xl font-bold mb-6 bg-gradient-to-r from-primary to-blue-400 bg-clip-text text-transparent">
-                            Nguyen Dao Jewelry
-                        </h1>
-                        <p className="text-xl md:text-2xl text-gray-300 mb-8 max-w-2xl mx-auto">
-                            Khám phá bộ sưu tập trang sức cao cấp được chế tác tỉ mỉ từ những nghệ nhân tài ba
-                        </p>
-                        <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                            <a
-                                href="#products"
-                                className="bg-primary text-black px-8 py-4 rounded-lg font-semibold text-lg hover:opacity-80 transition-opacity"
-                            >
-                                Khám phá ngay
-                            </a>
-                            <a
-                                href="#collections"
-                                className="border-2 border-primary text-primary px-8 py-4 rounded-lg font-semibold text-lg hover:bg-primary hover:text-black transition-colors"
-                            >
-                                Bộ sưu tập
-                            </a>
+                <section className="relative h-screen overflow-hidden">
+                    {/* ✅ Top Half - Banner Carousel (50%) */}
+                    <div className="relative w-full h-1/2">
+                        {/* Banner Images */}
+                        <div className="relative w-full h-full">
+                            {bannerImages.map((banner, index) => (
+                                <div
+                                    key={index}
+                                    className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${index === currentSlide ? 'opacity-100' : 'opacity-0'
+                                        }`}
+                                >
+                                    <img
+                                        src={banner.src}
+                                        alt={banner.title}
+                                        className="w-full h-full object-cover"
+                                        onError={(e) => {
+                                            e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAwIiBoZWlnaHQ9IjYwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMzMzIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtc2l6ZT0iMjAiIGZpbGw9IiNmZmYiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5CYW5uZXIgSW1hZ2U8L3RleHQ+PC9zdmc+'
+                                        }}
+                                    />
+                                    {/* Overlay */}
+                                    <div className="absolute inset-0 bg-black bg-opacity-40"></div>
+                                </div>
+                            ))}
+                        </div>
+
+                        {/* Content Overlay */}
+                        <div className="absolute inset-0 flex items-center justify-center z-10">
+                            <div className="text-center max-w-4xl mx-auto px-4">
+                                <h1 className="text-3xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-primary to-blue-400 bg-clip-text text-transparent">
+                                    {bannerImages[currentSlide].title}
+                                </h1>
+                                <p className="text-lg md:text-xl text-gray-300 mb-6 max-w-2xl mx-auto">
+                                    {bannerImages[currentSlide].subtitle}
+                                </p>
+                                <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                                    <a
+                                        href="#products"
+                                        className="bg-primary text-black px-6 py-3 rounded-lg font-semibold hover:opacity-80 transition-opacity"
+                                    >
+                                        {bannerImages[currentSlide].cta}
+                                    </a>
+                                    <a
+                                        href="#collections"
+                                        className="border-2 border-primary text-primary px-6 py-3 rounded-lg font-semibold hover:bg-primary hover:text-black transition-colors"
+                                    >
+                                        Bộ sưu tập
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Navigation Arrows */}
+                        <button
+                            onClick={prevSlide}
+                            className="absolute left-4 top-1/2 transform -translate-y-1/2 z-20 bg-black bg-opacity-50 hover:bg-opacity-75 text-white p-2 rounded-full transition-all"
+                        >
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                            </svg>
+                        </button>
+
+                        <button
+                            onClick={nextSlide}
+                            className="absolute right-4 top-1/2 transform -translate-y-1/2 z-20 bg-black bg-opacity-50 hover:bg-opacity-75 text-white p-2 rounded-full transition-all"
+                        >
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                            </svg>
+                        </button>
+
+                        {/* Dots Indicator */}
+                        <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-20 flex space-x-2">
+                            {bannerImages.map((_, index) => (
+                                <button
+                                    key={index}
+                                    onClick={() => goToSlide(index)}
+                                    className={`w-2 h-2 rounded-full transition-all ${index === currentSlide
+                                        ? 'bg-primary'
+                                        : 'bg-white bg-opacity-50 hover:bg-opacity-75'
+                                        }`}
+                                />
+                            ))}
                         </div>
                     </div>
 
-                    {/* Scroll indicator */}
-                    <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce">
-                        <svg className="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-                        </svg>
+                    {/* Bottom Half - Gallery Grid (50%) */}
+                    <div className="relative w-full h-1/2 bg-gray-900">
+                        <div className="max-w-7xl mx-auto px-4 h-full flex flex-col">
+                            {/* ✅ Section Header - Giảm padding */}
+                            <div className="text-center py-2 mt-8">
+                                <h2 className="text-2xl md:text-3xl font-bold mb-2">Bộ Sưu Tập Nổi Bật</h2>
+                                <p className="text-gray-400">Khám phá những thiết kế độc đáo của chúng tôi</p>
+                            </div>
+
+                            {/* ✅ Flex container - Giảm gap */}
+                            <div className="flex-1 flex flex-col justify-center mt-2">
+                                {/* Grid Gallery - Compact */}
+                                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-4">
+                                    {galleryImages.map((image, index) => (
+                                        <div
+                                            key={index}
+                                            className="relative group cursor-pointer overflow-hidden rounded-lg bg-gray-800 aspect-square"
+                                        >
+                                            <img
+                                                src={image.src}
+                                                alt={image.title}
+                                                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                                                onError={(e) => {
+                                                    e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjNGI1NTYzIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtc2l6ZT0iMTQiIGZpbGw9IiNmZmYiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5HYWxsZXJ5PC90ZXh0Pjwvc3ZnPg=='
+                                                }}
+                                            />
+
+                                            {/* Overlay on hover */}
+                                            <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-60 transition-all duration-300 flex items-center justify-center">
+                                                <div className="text-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                                                    <h3 className="text-white font-semibold text-sm mb-1">{image.title}</h3>
+                                                    <p className="text-primary text-xs">{image.category}</p>
+                                                </div>
+                                            </div>
+
+                                            {/* Category Badge */}
+                                            <div className="absolute top-2 left-2 bg-primary text-black px-2 py-1 rounded text-xs font-medium opacity-0 group-hover:opacity-100 transition-opacity">
+                                                {image.category}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+
+                                {/* ✅ View More Button - Sát ngay dưới grid */}
+                                <div className="text-center">
+                                    <a
+                                        href="#collections"
+                                        className="inline-flex items-center text-primary hover:text-blue-400 transition-colors"
+                                    >
+                                        <span className="mr-2">Xem thêm bộ sưu tập</span>
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                                        </svg>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Scroll indicator */}
+                        <div className="absolute bottom-4 right-4 z-20 animate-bounce">
+                            <svg className="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                            </svg>
+                        </div>
                     </div>
                 </section>
 
@@ -57,76 +278,61 @@ function Home() {
                             </p>
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                            {/* Product Card 1 */}
-                            <div className="bg-black rounded-lg overflow-hidden border border-gray-800 hover:border-primary transition-colors group">
-                                <div className="aspect-square bg-gray-800 relative overflow-hidden">
-                                    <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-blue-400/20 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                                    <div className="flex items-center justify-center h-full">
-                                        <span className="text-6xl">💍</span>
-                                    </div>
-                                </div>
-                                <div className="p-6">
-                                    <h3 className="text-xl font-semibold mb-2">Nhẫn Kim Cương Sang Trọng</h3>
-                                    <p className="text-gray-400 mb-4">Nhẫn kim cương 18K với thiết kế tinh tế</p>
-                                    <div className="flex justify-between items-center">
-                                        <span className="text-2xl font-bold text-primary">25.000.000đ</span>
-                                        <button className="bg-primary text-black px-4 py-2 rounded-lg font-medium hover:opacity-80 transition-opacity">
-                                            Xem chi tiết
-                                        </button>
-                                    </div>
-                                </div>
+                        {/* Loading State */}
+                        {featuredLoading && (
+                            <div className="flex justify-center items-center py-20">
+                                <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-primary"></div>
                             </div>
+                        )}
 
-                            {/* Product Card 2 */}
-                            <div className="bg-black rounded-lg overflow-hidden border border-gray-800 hover:border-primary transition-colors group">
-                                <div className="aspect-square bg-gray-800 relative overflow-hidden">
-                                    <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-blue-400/20 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                                    <div className="flex items-center justify-center h-full">
-                                        <span className="text-6xl">📿</span>
-                                    </div>
-                                </div>
-                                <div className="p-6">
-                                    <h3 className="text-xl font-semibold mb-2">Dây Chuyền Vàng Ý</h3>
-                                    <p className="text-gray-400 mb-4">Dây chuyền vàng 18K nhập khẩu từ Ý</p>
-                                    <div className="flex justify-between items-center">
-                                        <span className="text-2xl font-bold text-primary">15.000.000đ</span>
-                                        <button className="bg-primary text-black px-4 py-2 rounded-lg font-medium hover:opacity-80 transition-opacity">
-                                            Xem chi tiết
-                                        </button>
-                                    </div>
-                                </div>
+                        {/* Error State */}
+                        {featuredError && (
+                            <div className="text-center py-20">
+                                <div className="text-red-400 mb-4">⚠️ Có lỗi xảy ra khi tải sản phẩm</div>
+                                <p className="text-gray-400">{featuredError}</p>
                             </div>
+                        )}
 
-                            {/* Product Card 3 */}
-                            <div className="bg-black rounded-lg overflow-hidden border border-gray-800 hover:border-primary transition-colors group">
-                                <div className="aspect-square bg-gray-800 relative overflow-hidden">
-                                    <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-blue-400/20 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                                    <div className="flex items-center justify-center h-full">
-                                        <span className="text-6xl">👂</span>
-                                    </div>
+                        {/* Products Grid */}
+                        {!featuredLoading && !featuredError && (
+                            <>
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                                    {featuredProducts.length > 0 ? (
+                                        featuredProducts.map((product) => (
+                                            <ProductCard key={product._id} product={product} />
+                                        ))
+                                    ) : (
+                                        // Fallback static products
+                                        Array.from({ length: 3 }).map((_, index) => (
+                                            <div key={index} className="bg-black rounded-lg overflow-hidden border border-gray-800">
+                                                <div className="aspect-square bg-gray-800 flex items-center justify-center">
+                                                    <span className="text-6xl">💎</span>
+                                                </div>
+                                                <div className="p-6">
+                                                    <h3 className="text-xl font-semibold mb-2">Đang cập nhật...</h3>
+                                                    <p className="text-gray-400 mb-4">Sản phẩm đang được cập nhật</p>
+                                                    <div className="flex justify-between items-center">
+                                                        <span className="text-2xl font-bold text-primary">---</span>
+                                                        <button className="bg-gray-600 text-gray-400 px-4 py-2 rounded-lg font-medium cursor-not-allowed">
+                                                            Đang cập nhật
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))
+                                    )}
                                 </div>
-                                <div className="p-6">
-                                    <h3 className="text-xl font-semibold mb-2">Bông Tai Ngọc Trai</h3>
-                                    <p className="text-gray-400 mb-4">Bông tai ngọc trai tự nhiên cao cấp</p>
-                                    <div className="flex justify-between items-center">
-                                        <span className="text-2xl font-bold text-primary">8.500.000đ</span>
-                                        <button className="bg-primary text-black px-4 py-2 rounded-lg font-medium hover:opacity-80 transition-opacity">
-                                            Xem chi tiết
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
 
-                        <div className="text-center mt-12">
-                            <a
-                                href="#"
-                                className="inline-block border-2 border-primary text-primary px-8 py-3 rounded-lg font-semibold hover:bg-primary hover:text-black transition-colors"
-                            >
-                                Xem tất cả sản phẩm
-                            </a>
-                        </div>
+                                <div className="text-center mt-12">
+                                    <a
+                                        href="/products"
+                                        className="inline-block border-2 border-primary text-primary px-8 py-3 rounded-lg font-semibold hover:bg-primary hover:text-black transition-colors"
+                                    >
+                                        Xem tất cả sản phẩm ({allProducts.length})
+                                    </a>
+                                </div>
+                            </>
+                        )}
                     </div>
                 </section>
 
