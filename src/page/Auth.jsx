@@ -1,12 +1,21 @@
 // src/page/Auth.jsx
 import { useState, useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
+import { useNavigate } from '@tanstack/react-router'
 import { ROUTES } from '../routes/index.js'
-import { loginUser, registerUser, clearMessage, clearError } from '../store/slices/authSlice.js'
+import {
+    loginUser,
+    registerUser,
+    loginWithGoogle,
+    handleGoogleCallback,
+    clearMessage,
+    clearError
+} from '../store/slices/authSlice.js'
 import VerifyOtp from '../components/layout/VerifyOtp.jsx'
 
 function Auth() {
     const dispatch = useDispatch()
+    const navigate = useNavigate()
     const {
         isLoading,
         error,
@@ -26,13 +35,42 @@ function Auth() {
     // Handle authentication success
     useEffect(() => {
         if (isAuthenticated && !needsVerification) {
-            setTimeout(() => {
-                window.location.href = ROUTES.HOME
-            }, 2000)
+            const timer = setTimeout(() => {
+                console.log('Navigating to HOME using TanStack Router...')
+                try {
+                    navigate({ to: ROUTES.HOME })
+                } catch (error) {
+                    console.error('Navigation error:', error)
+                    window.location.href = ROUTES.HOME
+                }
+            }, 1500)
+
+            return () => clearTimeout(timer)
         }
     }, [isAuthenticated, needsVerification])
 
-    // Handle input changes
+    // Handle Google callback on component mount
+    useEffect(() => {
+        const urlParams = new URLSearchParams(window.location.search)
+        const token = urlParams.get('token')
+        const userStr = urlParams.get('user')
+        const error = urlParams.get('error')
+
+        if (token || userStr || error) {
+            console.log('🔄 Processing Google callback...')
+            dispatch(handleGoogleCallback(urlParams))
+                .unwrap()
+                .then((result) => {
+                    console.log('Google login successful:', result)
+                    window.history.replaceState({}, document.title, window.location.pathname)
+                })
+                .catch((error) => {
+                    console.error('Google login failed:', error)
+                    window.history.replaceState({}, document.title, window.location.pathname)
+                })
+        }
+    }, [dispatch])
+
     const handleInputChange = (e) => {
         const { name, value } = e.target
         setFormData(prev => ({
@@ -40,38 +78,28 @@ function Auth() {
             [name]: value
         }))
 
-        // Clear messages when user types
         if (error || message) {
             dispatch(clearMessage())
             dispatch(clearError())
         }
     }
 
-    // Handle form submission
     const handleSubmit = async (e) => {
         e.preventDefault()
 
-        // Validate inputs
-        if (!formData.userName.trim()) {
-            return
-        }
-
-        if (!formData.password.trim()) {
+        if (!formData.userName.trim() || !formData.password.trim()) {
             return
         }
 
         if (isLogin) {
-            // Đăng nhập
             dispatch(loginUser({
                 userName: formData.userName,
                 password: formData.password
             }))
         } else {
-            // Đăng ký
             if (!formData.email.trim()) {
                 return
             }
-
             dispatch(registerUser({
                 userName: formData.userName,
                 password: formData.password,
@@ -80,30 +108,35 @@ function Auth() {
         }
     }
 
-    // Toggle between login and register
+    const handleGoogleLogin = () => {
+        console.log('Starting Google login...')
+        dispatch(loginWithGoogle())
+    }
+
     const toggleMode = () => {
         setIsLogin(!isLogin)
-        setFormData({
-            userName: '',
-            password: '',
-            email: ''
-        })
+        setFormData({ userName: '', password: '', email: '' })
         dispatch(clearMessage())
         dispatch(clearError())
     }
 
-    // Handle OTP verification success
     const handleOtpSuccess = () => {
-        // Redux sẽ tự động handle redirect thông qua useEffect
+        // Will be handled by useEffect above
     }
 
-    // Handle back from OTP verification
     const handleOtpBack = () => {
         dispatch(clearMessage())
         dispatch(clearError())
     }
 
-    // Render OTP verification component
+    const getSuccessMessage = () => {
+        if (isAuthenticated && message) {
+            return `${message} Đang chuyển hướng...`
+        }
+        return error || message
+    }
+
+    // OTP verification screen
     if (needsVerification && registrationEmail) {
         return (
             <VerifyOtp
@@ -114,29 +147,16 @@ function Auth() {
         )
     }
 
-    // Get message type
-    const getMessageType = () => {
-        if (error) return 'error'
-        if (message) {
-            if (message.includes('thành công')) return 'success'
-            return 'info'
-        }
-        return ''
-    }
-
-    // Get message classes
     const getMessageClass = () => {
         const baseClass = 'message'
-        const type = getMessageType()
-        switch (type) {
-            case 'success': return `${baseClass} message-success`
-            case 'error': return `${baseClass} message-error`
-            case 'info': return `${baseClass} message-info`
-            default: return baseClass
+        if (error) return `${baseClass} message-error`
+        if (message) {
+            if (message.includes('thành công') || isAuthenticated) return `${baseClass} message-success`
+            return `${baseClass} message-info`
         }
+        return baseClass
     }
 
-    // Render main auth form
     return (
         <div className="app-container fade-in">
             <header className="app-header md:max-w-lg">
@@ -146,9 +166,33 @@ function Auth() {
 
                 {(message || error) && (
                     <div className={getMessageClass()}>
-                        {error || message}
+                        {getSuccessMessage()}
+                        {isAuthenticated && (
+                            <div className="flex justify-center mt-2">
+                                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                            </div>
+                        )}
                     </div>
                 )}
+
+                {/* Google Login Button */}
+                <div className="w-full max-w-xs mb-6">
+                    <button
+                        onClick={handleGoogleLogin}
+                        disabled={isLoading}
+                        className="w-full bg-white text-gray-700 border border-gray-300 rounded-lg px-4 py-3 flex items-center justify-center space-x-3 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+                    >
+                        <img src="../assets/images/logoGG.png" alt="Google" className="w-5 h-5" />
+                        <span>Đăng nhập với Google</span>
+                    </button>
+                </div>
+
+                {/* Divider */}
+                <div className="w-full max-w-xs mb-6 flex items-center">
+                    <div className="flex-1 border-t border-gray-600"></div>
+                    <span className="px-4 text-gray-400 text-sm">hoặc</span>
+                    <div className="flex-1 border-t border-gray-600"></div>
+                </div>
 
                 <form onSubmit={handleSubmit} className="auth-form">
                     <input
@@ -199,7 +243,7 @@ function Auth() {
                 {isLogin && (
                     <div className="mt-4 text-center">
                         <small className="text-gray-400 text-sm">
-                            💡 Bạn có thể đăng nhập bằng email hoặc tên đăng nhập
+                            Bạn có thể đăng nhập bằng email hoặc tên đăng nhập
                         </small>
                     </div>
                 )}
