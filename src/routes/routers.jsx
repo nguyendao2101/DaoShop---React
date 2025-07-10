@@ -8,6 +8,7 @@ import { ROUTES } from './index.js'
 // Import components
 import Home from '../page/Home.jsx'
 import Auth from '../page/Auth.jsx'
+import ProductDetail from '../page/ProductDetail.jsx'
 import GoogleSuccess from '../components/layout/GoogleSuccess.jsx'
 
 // Root route
@@ -15,8 +16,6 @@ const rootRoute = createRootRoute({
     component: () => (
         <>
             <Outlet />
-            {/* ✅ Comment out devtools tạm thời */}
-            {/* <TanStackRouterDevtools /> */}
         </>
     ),
 })
@@ -27,6 +26,13 @@ const homeRoute = createRoute({
     path: '/',
     component: Home,
 })
+
+// Product detail route
+const productDetailRoute = createRoute({
+    getParentRoute: () => rootRoute,
+    path: '/product/$productId',
+    component: ProductDetail,
+});
 
 // Auth route
 const authRoute = createRoute({
@@ -47,6 +53,7 @@ const routeTree = rootRoute.addChildren([
     homeRoute,
     authRoute,
     googleSuccessRoute,
+    productDetailRoute
 ])
 
 export const router = createRouter({ routeTree })

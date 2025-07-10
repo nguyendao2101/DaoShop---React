@@ -92,6 +92,42 @@ export const fetchProductById = createAsyncThunk(
     }
 );
 
+export const fetchRelatedProducts = createAsyncThunk(
+    'products/fetchRelated',
+    async ({ category, currentProductId, limit = 6 }, { rejectWithValue }) => {
+        try {
+            const response = await fetch(`${API_BASE_URL}/products`);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            const data = await response.json();
+            if (!data.success) {
+                throw new Error('Failed to fetch related products');
+            }
+
+            // Filter products cùng category và loại trừ sản phẩm hiện tại
+            const relatedProducts = data.data
+                .filter(product =>
+                    product.category === category &&
+                    product.id !== currentProductId &&
+                    product.show === "true"
+                )
+                .sort((a, b) => {
+                    // Sort by totalSold desc, then by avgRating desc
+                    if (b.totalSold !== a.totalSold) {
+                        return b.totalSold - a.totalSold;
+                    }
+                    return b.avgRating - a.avgRating;
+                })
+                .slice(0, limit);
+
+            return relatedProducts;
+        } catch (error) {
+            return rejectWithValue(error.message);
+        }
+    }
+);
+
 // Initial state
 const initialState = {
     // All products
@@ -114,6 +150,11 @@ const initialState = {
     selectedProduct: null,
     selectedProductLoading: false,
     selectedProductError: null,
+
+    // Related products
+    relatedProducts: [],
+    relatedLoading: false,
+    relatedError: null,
 
     // Filters
     filters: {
@@ -148,6 +189,11 @@ const productSlice = createSlice({
         setFilters: (state, action) => {
             state.filters = { ...state.filters, ...action.payload };
             state.currentPage = 1; // Reset to first page when filtering
+        },
+        // Clear related products
+        clearRelatedProducts: (state) => {
+            state.relatedProducts = [];
+            state.relatedError = null;
         },
 
         // Clear filters
@@ -205,6 +251,21 @@ const productSlice = createSlice({
                 state.featuredError = action.payload;
             })
 
+        builder
+            .addCase(fetchRelatedProducts.pending, (state) => {
+                state.relatedLoading = true;
+                state.relatedError = null;
+            })
+            .addCase(fetchRelatedProducts.fulfilled, (state, action) => {
+                state.relatedLoading = false;
+                state.relatedProducts = action.payload;
+                state.relatedError = null;
+            })
+            .addCase(fetchRelatedProducts.rejected, (state, action) => {
+                state.relatedLoading = false;
+                state.relatedError = action.payload;
+            });
+
         // Fetch products by category
         builder
             .addCase(fetchProductsByCategory.pending, (state) => {
@@ -246,7 +307,8 @@ export const {
     clearFilters,
     setCurrentPage,
     setCurrentCategory,
-    clearSelectedProduct
+    clearSelectedProduct,
+    clearRelatedProducts
 } = productSlice.actions;
 
 // Selectors
@@ -269,6 +331,10 @@ export const selectSelectedProductError = (state) => state.products.selectedProd
 export const selectFilters = (state) => state.products.filters;
 export const selectCurrentPage = (state) => state.products.currentPage;
 export const selectCurrentCategory = (state) => state.products.currentCategory;
+
+export const selectRelatedProducts = (state) => state.products.relatedProducts;
+export const selectRelatedLoading = (state) => state.products.relatedLoading;
+export const selectRelatedError = (state) => state.products.relatedError;
 
 // Computed selectors
 export const selectFilteredProducts = (state) => {

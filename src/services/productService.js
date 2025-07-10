@@ -15,6 +15,19 @@ export const productService = {
             throw error;
         }
     },
+    getProductById: async (productId) => {
+        try {
+            const response = await fetch(`${API_BASE_URL}/products/${productId}`);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            const data = await response.json();
+            return data;
+        } catch (error) {
+            console.error('Error fetching product by ID:', error);
+            throw error;
+        }
+    },
 
     // Lấy sản phẩm theo category
     getProductsByCategory: async (category) => {

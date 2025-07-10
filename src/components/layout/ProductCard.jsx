@@ -1,15 +1,17 @@
+// src/components/layout/ProductCard.jsx
 import React from 'react';
+import { useNavigate } from '@tanstack/react-router';
 
 const ProductCard = ({ product }) => {
-    // Lấy giá nhỏ nhất từ sizePrice
+    const navigate = useNavigate();
+
+    // Helper functions
     const getMinPrice = (sizePrice) => {
         if (!sizePrice) return 0;
-        
         const prices = Object.values(sizePrice).map(item => item.price);
         return Math.min(...prices);
     };
 
-    // Format giá tiền
     const formatPrice = (price) => {
         return new Intl.NumberFormat('vi-VN', {
             style: 'currency',
@@ -17,16 +19,21 @@ const ProductCard = ({ product }) => {
         }).format(price);
     };
 
-    // Lấy hình ảnh đầu tiên
     const getFirstImage = (productImg) => {
         if (!productImg) return null;
         return productImg["0"] || Object.values(productImg)[0];
     };
 
-    // Tính giá sau discount
     const getDiscountedPrice = (originalPrice, discountPercent) => {
         if (!discountPercent) return originalPrice;
         return originalPrice * (1 - discountPercent / 100);
+    };
+
+    const handleProductClick = () => {
+        navigate({
+            to: '/product/$productId',
+            params: { productId: product.id }
+        });
     };
 
     const minPrice = getMinPrice(product.sizePrice);
@@ -34,7 +41,10 @@ const ProductCard = ({ product }) => {
     const firstImage = getFirstImage(product.productImg);
 
     return (
-        <div className="bg-black rounded-lg overflow-hidden border border-gray-800 hover:border-primary transition-all duration-300 group">
+        <div
+            onClick={handleProductClick}
+            className="bg-black rounded-lg overflow-hidden border border-gray-800 hover:border-primary transition-all duration-300 group cursor-pointer"
+        >
             {/* Product Image */}
             <div className="aspect-square bg-gray-800 relative overflow-hidden">
                 {/* Discount Badge */}
@@ -43,10 +53,10 @@ const ProductCard = ({ product }) => {
                         -{product.discountPercent}%
                     </div>
                 )}
-                
+
                 {/* Hover Overlay */}
                 <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-blue-400/20 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                
+
                 {firstImage ? (
                     <img
                         src={firstImage}
@@ -75,12 +85,12 @@ const ProductCard = ({ product }) => {
             <div className="p-4">
                 {/* Category */}
                 <div className="text-primary text-xs font-medium mb-1">{product.category}</div>
-                
+
                 {/* Product Name */}
                 <h3 className="text-white font-semibold text-sm mb-2 line-clamp-2" title={product.nameProduct}>
                     {product.nameProduct}
                 </h3>
-                
+
                 {/* Material & Karat */}
                 <div className="text-gray-400 text-xs mb-2">
                     {product.material} {product.karat}
@@ -104,8 +114,14 @@ const ProductCard = ({ product }) => {
                             </span>
                         )}
                     </div>
-                    
-                    <button className="bg-primary text-black px-3 py-1.5 rounded-lg text-xs font-medium hover:opacity-80 transition-opacity">
+
+                    <button
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            handleProductClick();
+                        }}
+                        className="bg-primary text-black px-3 py-1.5 rounded-lg text-xs font-medium hover:opacity-80 transition-opacity"
+                    >
                         Xem chi tiết
                     </button>
                 </div>
