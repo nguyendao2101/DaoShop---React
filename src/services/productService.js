@@ -2,9 +2,23 @@ const API_BASE_URL = 'http://localhost:8797/api';
 
 export const productService = {
     // Lấy tất cả sản phẩm
-    getAllProducts: async () => {
+    getAllProducts: async (searchParams = {}) => {
         try {
-            const response = await fetch(`${API_BASE_URL}/products`);
+            const { search, category, ...otherParams } = searchParams;
+            const queryParams = new URLSearchParams();
+
+            if (search) queryParams.append('search', search);
+            if (category) queryParams.append('category', category);
+
+            Object.entries(otherParams).forEach(([key, value]) => {
+                if (value !== undefined && value !== null) {
+                    queryParams.append(key, value);
+                }
+            });
+
+            const url = `${API_BASE_URL}/products${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+
+            const response = await fetch(url);
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
@@ -12,6 +26,19 @@ export const productService = {
             return data;
         } catch (error) {
             console.error('Error fetching products:', error);
+            throw error;
+        }
+    },
+    searchProducts: async (searchTerm) => {
+        try {
+            const response = await fetch(`${API_BASE_URL}/products?search=${encodeURIComponent(searchTerm)}`);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            const data = await response.json();
+            return data;
+        } catch (error) {
+            console.error('Error searching products:', error);
             throw error;
         }
     },

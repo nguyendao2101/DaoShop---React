@@ -115,15 +115,6 @@ const ProductCard = ({ product }) => {
                         )}
                     </div>
 
-                    <button
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            handleProductClick();
-                        }}
-                        className="bg-primary text-black px-3 py-1.5 rounded-lg text-xs font-medium hover:opacity-80 transition-opacity"
-                    >
-                        Xem chi tiết
-                    </button>
                 </div>
 
                 {/* Total Sold */}
