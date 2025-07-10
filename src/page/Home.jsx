@@ -1,5 +1,6 @@
 // src/page/Home.jsx
 import { useState, useEffect } from 'react'
+import { useNavigate } from '@tanstack/react-router'
 import Header from '../components/layout/Header.jsx'
 import Footer from '../components/layout/Footer.jsx'
 import banner from '../assets/images/banner.png';
@@ -26,6 +27,7 @@ import ProductCard from '../components/layout/ProductCard';
 
 function Home() {
     const dispatch = useDispatch();
+    const navigate = useNavigate();
     const [currentSlide, setCurrentSlide] = useState(0)
     // Redux selectors
     const featuredProducts = useSelector(selectFeaturedProducts);
@@ -324,12 +326,12 @@ function Home() {
                                 </div>
 
                                 <div className="text-center mt-12">
-                                    <a
-                                        href="/products"
+                                    <button
+                                        onClick={() => navigate({ to: '/products' })}
                                         className="inline-block border-2 border-primary text-primary px-8 py-3 rounded-lg font-semibold hover:bg-primary hover:text-black transition-colors"
                                     >
                                         Xem tất cả sản phẩm ({allProducts.length})
-                                    </a>
+                                    </button>
                                 </div>
                             </>
                         )}
