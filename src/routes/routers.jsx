@@ -10,6 +10,7 @@ import Home from '../page/Home.jsx'
 import Auth from '../page/Auth.jsx'
 import ProductDetail from '../page/ProductDetail.jsx'
 import ProductAll from '../page/ProductAll.jsx'
+import Collection from '../page/Collection.jsx'
 import GoogleSuccess from '../components/layout/GoogleSuccess.jsx'
 
 // Root route
@@ -19,21 +20,27 @@ const rootRoute = createRootRoute({
             <Outlet />
         </>
     ),
-})
+});
 
 // Home route
 const homeRoute = createRoute({
     getParentRoute: () => rootRoute,
     path: '/',
     component: Home,
-})
+});
+
+const collectionDetailRoute = createRoute({
+    getParentRoute: () => rootRoute,
+    path: '/collections/$collectionId',
+    component: Collection,
+});
 
 // Products route
 const productsRoute = createRoute({
     getParentRoute: () => rootRoute,
     path: '/products',
     component: ProductAll,
-})
+});
 
 // Product detail route
 const productDetailRoute = createRoute({
@@ -47,7 +54,7 @@ const authRoute = createRoute({
     getParentRoute: () => rootRoute,
     path: '/auth',
     component: Auth,
-})
+});
 
 
 // Google Success route
@@ -55,14 +62,15 @@ const googleSuccessRoute = createRoute({
     getParentRoute: () => rootRoute,
     path: '/auth/success',
     component: GoogleSuccess,
-})
+});
 
 const routeTree = rootRoute.addChildren([
     homeRoute,
     authRoute,
     productsRoute,
     googleSuccessRoute,
-    productDetailRoute
-])
+    productDetailRoute,
+    collectionDetailRoute
+]);
 
 export const router = createRouter({ routeTree })

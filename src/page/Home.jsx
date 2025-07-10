@@ -23,12 +23,14 @@ import {
     selectAllProducts
 } from '../store/slices/productSlice';
 import ProductCard from '../components/layout/ProductCard';
+import { collectionService } from '../services/collectionService';
 
 
 function Home() {
     const dispatch = useDispatch();
     const navigate = useNavigate();
     const [currentSlide, setCurrentSlide] = useState(0)
+    const [availableCollections, setAvailableCollections] = useState([]);
     // Redux selectors
     const featuredProducts = useSelector(selectFeaturedProducts);
     const featuredLoading = useSelector(selectFeaturedLoading);
@@ -38,6 +40,18 @@ function Home() {
     useEffect(() => {
         dispatch(fetchFeaturedProducts(3));
         dispatch(fetchAllProducts());
+        // Load available collections
+        const loadCollections = async () => {
+            try {
+                const collections = await collectionService.getAllCollections();
+                setAvailableCollections(collections);
+                console.log('Available collections:', collections.map(c => c.idColection));
+            } catch (error) {
+                console.error('Error loading collections:', error);
+            }
+        };
+
+        loadCollections();
     }, [dispatch]);
     const bannerImages = [
         {
@@ -58,13 +72,13 @@ function Home() {
             subtitle: "Sở hữu trang sức yêu thích chỉ trong 3 giờ",
             cta: "Xem thêm"
         }
-    ]
+    ];
 
     const galleryImages = [
         {
             src: collectionChoMe,
             title: "Bộ sưu tập Chót Mê",
-            category: "Chót Mê"
+            category: "ChotMe"
         },
         {
             src: collectionOnlyYou,
@@ -91,7 +105,13 @@ function Home() {
             title: "Bộ sưu tập Tuyệt Tác",
             category: "TuyetTacTrangSuc"
         }
-    ]
+    ];
+
+    // Validate collection exists before navigation
+    const handleCollectionClick = (collectionId) => {
+        console.log('🔥 Navigating to collection:', collectionId);
+        navigate({ to: `/collections/${collectionId}` });
+    };
 
     useEffect(() => {
         const interval = setInterval(() => {
@@ -112,6 +132,7 @@ function Home() {
     const prevSlide = () => {
         setCurrentSlide((prev) => (prev - 1 + bannerImages.length) % bannerImages.length)
     }
+
     return (
         <div className="min-h-screen bg-black text-white flex flex-col">
             <Header />
@@ -146,7 +167,7 @@ function Home() {
                         {/* Content Overlay */}
                         <div className="absolute inset-0 flex items-center justify-center z-10">
                             <div className="text-center max-w-4xl mx-auto px-4">
-                                <h1 className="text-3xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-primary to-blue-400 bg-clip-text text-transparent">
+                                <h1 className="text-3xl md:text-5xl font-bold mb-4 text-yellow-400">
                                     {bannerImages[currentSlide].title}
                                 </h1>
                                 <p className="text-lg md:text-xl text-gray-300 mb-6 max-w-2xl mx-auto">
@@ -206,13 +227,13 @@ function Home() {
                     {/* Bottom Half - Gallery Grid (50%) */}
                     <div className="relative w-full h-1/2 bg-gray-900">
                         <div className="max-w-7xl mx-auto px-4 h-full flex flex-col">
-                            {/* ✅ Section Header - Giảm padding */}
+                            {/* Section Header - Giảm padding */}
                             <div className="text-center py-2 mt-8">
                                 <h2 className="text-2xl md:text-3xl font-bold mb-2">Bộ Sưu Tập Nổi Bật</h2>
                                 <p className="text-gray-400">Khám phá những thiết kế độc đáo của chúng tôi</p>
                             </div>
 
-                            {/* ✅ Flex container - Giảm gap */}
+                            {/* Flex container - Giảm gap */}
                             <div className="flex-1 flex flex-col justify-center mt-2">
                                 {/* Grid Gallery - Compact */}
                                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-4">
@@ -220,6 +241,7 @@ function Home() {
                                         <div
                                             key={index}
                                             className="relative group cursor-pointer overflow-hidden rounded-lg bg-gray-800 aspect-square"
+                                            onClick={() => handleCollectionClick(image.category)}
                                         >
                                             <img
                                                 src={image.src}
@@ -246,7 +268,7 @@ function Home() {
                                     ))}
                                 </div>
 
-                                {/* ✅ View More Button - Sát ngay dưới grid */}
+                                {/* View More Button - Sát ngay dưới grid */}
                                 <div className="text-center">
                                     <a
                                         href="#collections"
@@ -349,7 +371,10 @@ function Home() {
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                            <div className="relative rounded-lg overflow-hidden h-80 group cursor-pointer">
+                            <div
+                                className="relative rounded-lg overflow-hidden h-80 group cursor-pointer"
+                                onClick={() => handleCollectionClick("OnlyYou")}
+                            >
                                 <div className="absolute inset-0 bg-gradient-to-br from-primary/30 to-blue-400/30"></div>
                                 <div className="absolute inset-0 bg-black bg-opacity-40 group-hover:bg-opacity-20 transition-all"></div>
                                 <div className="relative z-10 h-full flex items-center justify-center text-center p-8">
@@ -365,7 +390,10 @@ function Home() {
                                 </div>
                             </div>
 
-                            <div className="relative rounded-lg overflow-hidden h-80 group cursor-pointer">
+                            <div
+                                className="relative rounded-lg overflow-hidden h-80 group cursor-pointer"
+                                onClick={() => handleCollectionClick("TuyetTacTrangSuc")}
+                            >
                                 <div className="absolute inset-0 bg-gradient-to-br from-purple-500/30 to-pink-500/30"></div>
                                 <div className="absolute inset-0 bg-black bg-opacity-40 group-hover:bg-opacity-20 transition-all"></div>
                                 <div className="relative z-10 h-full flex items-center justify-center text-center p-8">

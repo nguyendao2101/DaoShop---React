@@ -1,4 +1,3 @@
-// tailwind.config.js
 /** @type {import('tailwindcss').Config} */
 export default {
     content: [
@@ -8,10 +7,7 @@ export default {
     theme: {
         extend: {
             colors: {
-                primary: '#61dafb',
-            },
-            animation: {
-                'spin-slow': 'spin 20s linear infinite',
+                primary: '#F9A825',
             },
         },
     },
