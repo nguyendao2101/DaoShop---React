@@ -82,22 +82,7 @@ const ProductAll = () => {
 
         // Map frontend sortBy to API format
         if (filters.sortBy) {
-            switch (filters.sortBy) {
-                case 'price_asc':
-                    apiParams.sortBy = 'price-asc';
-                    break;
-                case 'price_desc':
-                    apiParams.sortBy = 'price-desc';
-                    break;
-                case 'bestseller':
-                    apiParams.sortBy = 'bestseller';
-                    break;
-                case 'rating':
-                    apiParams.sortBy = 'rating';
-                    break;
-                default:
-                    apiParams.sortBy = 'newest';
-            }
+            apiParams.sortBy = filters.sortBy;
         }
 
         console.log('🔥 Built API params:', apiParams);
@@ -158,29 +143,11 @@ const ProductAll = () => {
 
         // Price filter - IMPROVED LOGIC
         const [minPrice, maxPrice] = filters.priceRange;
-        console.log('🔥 Price filter range:', [minPrice, maxPrice]);
-
         if (minPrice > 0 || maxPrice < 100000000) {
-            const beforePriceFilter = filtered.length;
-
             filtered = filtered.filter(product => {
                 const price = getProductPrice(product);
-                const inRange = price >= minPrice && price <= maxPrice;
-
-                // Debug individual price checks
-                if (!inRange && beforePriceFilter <= 5) {
-                    console.log('🔥 Price filter exclude:', {
-                        name: product.nameProduct,
-                        price: price,
-                        range: [minPrice, maxPrice],
-                        sizePrice: product.sizePrice
-                    });
-                }
-
-                return inRange;
+                return price >= minPrice && price <= maxPrice;
             });
-
-            console.log('🔥 After price filter:', filtered.length, 'from', beforePriceFilter);
         }
 
         // Sort products
@@ -193,9 +160,13 @@ const ProductAll = () => {
                 return filtered.sort((a, b) => (parseInt(b.totalSold) || 0) - (parseInt(a.totalSold) || 0));
             case 'rating':
                 return filtered.sort((a, b) => (parseFloat(b.avgRating) || 0) - (parseFloat(a.avgRating) || 0));
+            case 'name_asc':
+                return filtered.sort((a, b) => (a.nameProduct || '').localeCompare(b.nameProduct || ''));
+            case 'name_desc':
+                return filtered.sort((a, b) => (b.nameProduct || '').localeCompare(a.nameProduct || ''));
             case 'newest':
             default:
-                return filtered.sort((a, b) => new Date(b.updatedAt || 0) - new Date(a.updatedAt || 0));
+                return filtered.sort((a, b) => new Date(b.createdAt || b.updatedAt || 0) - new Date(a.createdAt || a.updatedAt || 0));
         }
     }, [searchResults, filters, isSearchMode]);
 
@@ -449,27 +420,6 @@ const ProductAll = () => {
                                 />
                             )}
 
-                            {/* Debug Info */}
-                            {process.env.NODE_ENV === 'development' && (
-                                <div className="mt-8 p-4 bg-gray-900 rounded-lg text-xs">
-                                    <h4 className="font-semibold mb-2">Debug Info:</h4>
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div>
-                                            <strong>Mode:</strong> {isSearchMode ? 'SEARCH' : 'PAGINATED'}
-                                            <br />
-                                            <strong>Search Term:</strong> "{searchTerm}"
-                                            <br />
-                                            <strong>Display Products:</strong> {displayProducts.length}
-                                            <br />
-                                            <strong>Cache Size:</strong> {allProductsCache.length}
-                                        </div>
-                                        <div>
-                                            <strong>Filters:</strong>
-                                            <pre className="text-gray-400 text-xs mt-1">{JSON.stringify(filters, null, 1)}</pre>
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
                         </div>
                     </div>
                 </div>

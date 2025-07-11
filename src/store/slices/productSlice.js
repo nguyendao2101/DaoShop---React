@@ -28,14 +28,29 @@ export const fetchAllProducts = createAsyncThunk(
             if (material) queryParams.append('material', material);
             if (karat) queryParams.append('karat', karat);
             if (gender) queryParams.append('gender', gender);
-            if (sortBy) queryParams.append('sortBy', sortBy);
 
-            // FIX: Use correct backend parameter names
+            // Price filters
             if (priceMin > 0) queryParams.append('minPrice', priceMin);
             if (priceMax < 100000000) queryParams.append('maxPrice', priceMax);
 
+            // SORT MAPPING - Convert frontend sortBy to backend format
+            const sortMapping = {
+                'newest': { sortBy: 'createdAt', sortOrder: 'desc' },
+                'price_asc': { sortBy: 'lowestPrice', sortOrder: 'asc' },
+                'price_desc': { sortBy: 'lowestPrice', sortOrder: 'desc' },
+                'bestseller': { sortBy: 'totalSold', sortOrder: 'desc' },
+                'rating': { sortBy: 'avgRating', sortOrder: 'desc' },
+                'name_asc': { sortBy: 'nameProduct', sortOrder: 'asc' },
+                'name_desc': { sortBy: 'nameProduct', sortOrder: 'desc' },
+            };
+
+            const backendSort = sortMapping[sortBy] || sortMapping['newest'];
+            queryParams.append('sortBy', backendSort.sortBy);
+            queryParams.append('sortOrder', backendSort.sortOrder);
+
             const url = `${API_BASE_URL}/products?${queryParams.toString()}`;
             console.log('🔥 Fetching paginated products URL:', url);
+            console.log('🔥 Sort mapping:', { frontend: sortBy, backend: backendSort });
 
             const response = await fetch(url);
             if (!response.ok) {

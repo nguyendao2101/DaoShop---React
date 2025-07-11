@@ -352,7 +352,7 @@ function Home() {
                                         onClick={() => navigate({ to: '/products' })}
                                         className="inline-block border-2 border-primary text-primary px-8 py-3 rounded-lg font-semibold hover:bg-primary hover:text-black transition-colors"
                                     >
-                                        Xem tất cả sản phẩm ({allProducts.length})
+                                        Xem tất cả sản phẩm
                                     </button>
                                 </div>
                             </>

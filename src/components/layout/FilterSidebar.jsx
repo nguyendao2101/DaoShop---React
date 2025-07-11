@@ -122,15 +122,6 @@ const FilterSidebar = ({ filters, onFilterChange, products = [] }) => {
                 </button>
             </div>
 
-            {/* DEBUG INFO */}
-            {process.env.NODE_ENV === 'development' && (
-                <div className="text-xs text-gray-500 border border-gray-700 p-2 rounded">
-                    <div>Products: {products.length}</div>
-                    <div>Price Range: [{filters.priceRange[0]}, {filters.priceRange[1]}]</div>
-                    <div>Sample Prices: {samplePrices.map(p => p.extractedPrice).join(', ')}</div>
-                </div>
-            )}
-
             {/* Category Filter */}
             <div className="space-y-3">
                 <h4 className="font-medium text-white">Danh mục</h4>

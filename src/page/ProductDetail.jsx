@@ -412,7 +412,33 @@ const ProductDetail = () => {
                             </div>
                         </div>
                     </div>
+                    <div className="border-t border-gray-800 pt-12 mb-16">
+                        <div className="max-w-4xl">
+                            <div className="flex items-center justify-between mb-6">
+                                <h2 className="text-2xl font-bold">Mô tả sản phẩm</h2>
+                                {product.description && product.description.length > 300 && (
+                                    <button
+                                        onClick={() => setShowFullDescription(!showFullDescription)}
+                                        className="text-primary hover:underline text-sm"
+                                    >
+                                        {showFullDescription ? 'Thu gọn' : 'Xem thêm'}
+                                    </button>
+                                )}
+                            </div>
 
+                            <div className={`${!showFullDescription && product.description && product.description.length > 300
+                                ? 'max-h-32 overflow-hidden relative'
+                                : ''
+                                }`}>
+                                {formatDescriptionList(product.description)}
+
+                                {/* Gradient overlay khi thu gọn */}
+                                {!showFullDescription && product.description && product.description.length > 300 && (
+                                    <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-black to-transparent"></div>
+                                )}
+                            </div>
+                        </div>
+                    </div>
                     {/* Product Description */}
                     <div className="border-t border-gray-800 pt-12">
                         <div className="flex items-center justify-between mb-6">
