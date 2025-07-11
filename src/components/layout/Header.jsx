@@ -104,7 +104,7 @@ function Header() {
                                         <div className="absolute right-0 mt-2 w-48 bg-gray-900 rounded-lg shadow-lg border border-gray-700">
                                             <div className="p-3 border-b border-gray-700">
                                                 <p className="text-sm text-gray-400">Đăng nhập với</p>
-                                                <p className="font-medium text-primary">{user?.email}</p>
+                                                <p className="font-medium text-primary">{user?.userName}</p>
                                             </div>
                                             <div className="py-2">
                                                 <a href="#" className="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 hover:text-primary">

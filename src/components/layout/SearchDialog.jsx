@@ -1,46 +1,70 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from '@tanstack/react-router';
-import { productService } from '../../services/productService';
+import { useDispatch, useSelector } from 'react-redux';
+import {
+    searchAllProducts,
+    fetchAllProductsForSearch,
+    selectSearchResults,
+    selectSearchLoading,
+    selectSearchError,
+    selectAllProductsCache,
+    clearSearchResults,
+    setSearchTerm
+} from '../../store/slices/productSlice';
 
 const SearchDialog = ({ isOpen, onClose }) => {
     const navigate = useNavigate();
-    const [searchTerm, setSearchTerm] = useState('');
-    const [products, setProducts] = useState([]);
-    const [filteredProducts, setFilteredProducts] = useState([]);
-    const [loading, setLoading] = useState(false);
+    const dispatch = useDispatch();
+    const [localSearchTerm, setLocalSearchTerm] = useState('');
     const [recentSearches, setRecentSearches] = useState([]);
     const searchInputRef = useRef(null);
 
-    // Load tất cả sản phẩm khi dialog mở
+    // Redux state
+    const searchResults = useSelector(selectSearchResults);
+    const searchLoading = useSelector(selectSearchLoading);
+    const searchError = useSelector(selectSearchError);
+    const allProductsCache = useSelector(selectAllProductsCache);
+
+    console.log('🔥 SearchDialog - Search results count:', searchResults.length);
+    console.log('🔥 SearchDialog - Cache count:', allProductsCache.length);
+
+    // Load all products cache khi dialog mở (nếu chưa có)
     useEffect(() => {
         if (isOpen) {
-            loadProducts();
             loadRecentSearches();
-            // Focus vào input khi dialog mở
+
+            // Load all products cache nếu chưa có
+            if (allProductsCache.length === 0) {
+                console.log('🔥 SearchDialog - Loading all products cache...');
+                dispatch(fetchAllProductsForSearch());
+            }
+
+            // Focus input
             setTimeout(() => {
                 searchInputRef.current?.focus();
             }, 100);
         } else {
             // Reset khi đóng
-            setSearchTerm('');
-            setFilteredProducts([]);
+            setLocalSearchTerm('');
+            dispatch(clearSearchResults());
         }
-    }, [isOpen]);
+    }, [isOpen, dispatch, allProductsCache.length]);
 
-    // Load products từ API
-    const loadProducts = async () => {
-        setLoading(true);
-        try {
-            const response = await productService.getAllProducts();
-            if (response.success) {
-                setProducts(response.data || []);
+    // Debounced search effect
+    useEffect(() => {
+        if (!isOpen) return;
+
+        const timeoutId = setTimeout(() => {
+            if (localSearchTerm.trim().length >= 2) {
+                console.log('🔥 SearchDialog - Searching for:', localSearchTerm);
+                dispatch(searchAllProducts(localSearchTerm.trim()));
+            } else if (localSearchTerm.trim().length === 0) {
+                dispatch(clearSearchResults());
             }
-        } catch (error) {
-            console.error('Error loading products:', error);
-        } finally {
-            setLoading(false);
-        }
-    };
+        }, 300); // 300ms debounce
+
+        return () => clearTimeout(timeoutId);
+    }, [localSearchTerm, dispatch, isOpen]);
 
     // Load recent searches từ localStorage
     const loadRecentSearches = () => {
@@ -59,27 +83,13 @@ const SearchDialog = ({ isOpen, onClose }) => {
         localStorage.setItem('recentSearches', JSON.stringify(updated));
     };
 
-    // Filter products khi search
-    useEffect(() => {
-        if (searchTerm.trim()) {
-            const filtered = products.filter(product =>
-                product.nameProduct.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                product.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                (product.material && product.material.toLowerCase().includes(searchTerm.toLowerCase())) ||
-                (product.id && product.id.toLowerCase().includes(searchTerm.toLowerCase()))
-            ).slice(0, 8); // Giới hạn 8 kết quả
-
-            setFilteredProducts(filtered);
-        } else {
-            setFilteredProducts([]);
-        }
-    }, [searchTerm, products]);
-
     // Handle search submit
-    const handleSearch = (term = searchTerm) => {
+    const handleSearch = (term = localSearchTerm) => {
         if (term.trim()) {
             saveRecentSearch(term.trim());
-            navigate({ to: `/products?search=${encodeURIComponent(term.trim())}` });
+            // Set global search term and navigate
+            dispatch(setSearchTerm(term.trim()));
+            navigate({ to: '/products', search: { search: term.trim() } });
             onClose();
         }
     };
@@ -87,14 +97,15 @@ const SearchDialog = ({ isOpen, onClose }) => {
     // Handle product click
     const handleProductClick = (product) => {
         saveRecentSearch(product.nameProduct);
-        navigate({ to: `/product/${product.id}` });
+        navigate({ to: `/product/${product._id}` });
         onClose();
     };
 
     // Handle recent search click
     const handleRecentSearchClick = (term) => {
-        setSearchTerm(term);
-        handleSearch(term);
+        setLocalSearchTerm(term);
+        // Trigger immediate search
+        dispatch(searchAllProducts(term));
     };
 
     // Handle clear recent searches
@@ -113,12 +124,33 @@ const SearchDialog = ({ isOpen, onClose }) => {
 
     // Get product price
     const getProductPrice = (product) => {
-        return product.sizePrice?.[0]?.price || product.sizePrice?.["0"]?.price || 0;
+        if (product.sizePrice) {
+            // Array format
+            if (Array.isArray(product.sizePrice) && product.sizePrice[0]?.price) {
+                return product.sizePrice[0].price;
+            }
+            // Object format
+            if (typeof product.sizePrice === 'object') {
+                if (product.sizePrice["0"]?.price) {
+                    return product.sizePrice["0"].price;
+                }
+                if (product.sizePrice.price) {
+                    return product.sizePrice.price;
+                }
+            }
+        }
+        return product.price || 0;
     };
 
     // Get product image
     const getProductImage = (product) => {
-        return product.productImg?.[0] || product.productImg?.["0"] || null;
+        if (product.imageUrl) {
+            return Array.isArray(product.imageUrl) ? product.imageUrl[0] : product.imageUrl["0"] || product.imageUrl;
+        }
+        if (product.productImg) {
+            return Array.isArray(product.productImg) ? product.productImg[0] : product.productImg["0"] || product.productImg;
+        }
+        return null;
     };
 
     // Handle keyboard events
@@ -131,6 +163,9 @@ const SearchDialog = ({ isOpen, onClose }) => {
             onClose();
         }
     };
+
+    // Filter và limit results for display
+    const displayResults = searchResults.slice(0, 8); // Limit to 8 for UI
 
     if (!isOpen) return null;
 
@@ -157,11 +192,26 @@ const SearchDialog = ({ isOpen, onClose }) => {
                             ref={searchInputRef}
                             type="text"
                             placeholder="Tìm kiếm sản phẩm, nhẫn, bông tai..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
+                            value={localSearchTerm}
+                            onChange={(e) => setLocalSearchTerm(e.target.value)}
                             onKeyDown={handleKeyDown}
                             className="flex-1 bg-transparent text-white text-lg placeholder-gray-400 outline-none"
                         />
+
+                        {/* Clear Button */}
+                        {localSearchTerm && (
+                            <button
+                                onClick={() => {
+                                    setLocalSearchTerm('');
+                                    dispatch(clearSearchResults());
+                                }}
+                                className="text-gray-400 hover:text-white transition-colors"
+                            >
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                        )}
 
                         {/* Close Button */}
                         <button
@@ -177,21 +227,21 @@ const SearchDialog = ({ isOpen, onClose }) => {
 
                 {/* Content */}
                 <div className="max-h-96 overflow-y-auto">
-                    {loading ? (
+                    {searchLoading ? (
                         /* Loading State */
                         <div className="p-8 text-center">
                             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-                            <p className="text-gray-400">Đang tải dữ liệu...</p>
+                            <p className="text-gray-400">Đang tìm kiếm...</p>
                         </div>
-                    ) : searchTerm.trim() ? (
+                    ) : localSearchTerm.trim().length >= 2 ? (
                         /* Search Results */
-                        filteredProducts.length > 0 ? (
+                        displayResults.length > 0 ? (
                             <div className="p-4">
                                 <h3 className="text-sm font-medium text-gray-400 mb-3">
-                                    Kết quả tìm kiếm ({filteredProducts.length})
+                                    Kết quả tìm kiếm ({searchResults.length} sản phẩm)
                                 </h3>
                                 <div className="space-y-2">
-                                    {filteredProducts.map((product) => (
+                                    {displayResults.map((product) => (
                                         <div
                                             key={product._id}
                                             onClick={() => handleProductClick(product)}
@@ -232,7 +282,7 @@ const SearchDialog = ({ isOpen, onClose }) => {
                                             </div>
 
                                             {/* Price */}
-                                            <div className="text-primary font-semibold">
+                                            <div className="text-primary font-semibold text-sm">
                                                 {getProductPrice(product) > 0
                                                     ? formatPrice(getProductPrice(product))
                                                     : 'Liên hệ'
@@ -248,9 +298,16 @@ const SearchDialog = ({ isOpen, onClose }) => {
                                         onClick={() => handleSearch()}
                                         className="w-full text-center py-3 text-primary hover:text-primary-dark transition-colors"
                                     >
-                                        Xem tất cả kết quả cho "{searchTerm}"
+                                        Xem tất cả {searchResults.length} kết quả cho "{localSearchTerm}"
                                     </button>
                                 </div>
+                            </div>
+                        ) : searchError ? (
+                            /* Error State */
+                            <div className="p-8 text-center">
+                                <div className="text-4xl mb-4">⚠️</div>
+                                <p className="text-red-400 mb-2">Có lỗi xảy ra</p>
+                                <p className="text-sm text-gray-500">{searchError}</p>
                             </div>
                         ) : (
                             /* No Results */
@@ -262,6 +319,15 @@ const SearchDialog = ({ isOpen, onClose }) => {
                                 </p>
                             </div>
                         )
+                    ) : localSearchTerm.trim().length === 1 ? (
+                        /* Need more characters */
+                        <div className="p-8 text-center">
+                            <div className="text-4xl mb-4">⌨️</div>
+                            <p className="text-gray-400 mb-2">Nhập thêm ký tự</p>
+                            <p className="text-sm text-gray-500">
+                                Cần ít nhất 2 ký tự để tìm kiếm
+                            </p>
+                        </div>
                     ) : (
                         /* Recent Searches & Suggestions */
                         <div className="p-4">
@@ -312,6 +378,15 @@ const SearchDialog = ({ isOpen, onClose }) => {
                                     ))}
                                 </div>
                             </div>
+
+                            {/* Debug Info */}
+                            {/* {process.env.NODE_ENV === 'development' && (
+                                <div className="mt-6 pt-4 border-t border-gray-700 text-xs text-gray-500">
+                                    <div>Cache: {allProductsCache.length} products</div>
+                                    <div>Search results: {searchResults.length} products</div>
+                                    <div>Loading: {searchLoading ? 'Yes' : 'No'}</div>
+                                </div>
+                            )} */}
                         </div>
                     )}
                 </div>
