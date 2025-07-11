@@ -1,25 +1,101 @@
 // src/services/authService.js
 const API_BASE_URL = 'http://localhost:8797/api'
 
-// Create axios instance
+// Create axios instance with auth header support
 const apiClient = {
-    post: async (url, data) => {
+    getAuthHeaders: () => {
+        const token = localStorage.getItem('authToken')
+        console.log('🔍 Getting auth headers - Token:', token ? `${token.substring(0, 20)}...` : 'NULL')
+
+        const headers = {
+            'Content-Type': 'application/json',
+        }
+
+        if (token) {
+            headers['Authorization'] = `Bearer ${token}`
+            console.log('✅ Added Authorization header')
+        } else {
+            console.log('❌ No token found in localStorage')
+        }
+
+        return headers
+    },
+
+    post: async (url, data, requireAuth = false) => {
+        const headers = requireAuth ? apiClient.getAuthHeaders() : {
+            'Content-Type': 'application/json',
+        }
+
+        console.log(`📤 POST ${url} - RequireAuth: ${requireAuth}`, { headers: Object.keys(headers) })
+
         const response = await fetch(`${API_BASE_URL}${url}`, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
+            headers,
             body: JSON.stringify(data)
         })
+
+        if (!response.ok) {
+            console.error(`❌ POST ${url} failed:`, response.status, response.statusText)
+        }
+
         return { data: await response.json() }
     },
-    get: async (url) => {
+
+    get: async (url, requireAuth = false) => {
+        const headers = requireAuth ? apiClient.getAuthHeaders() : {
+            'Content-Type': 'application/json',
+        }
+
+        console.log(`📤 GET ${url} - RequireAuth: ${requireAuth}`, { headers: Object.keys(headers) })
+
         const response = await fetch(`${API_BASE_URL}${url}`, {
             method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-            }
+            headers
         })
+
+        if (!response.ok) {
+            console.error(`❌ GET ${url} failed:`, response.status, response.statusText)
+        }
+
+        return { data: await response.json() }
+    },
+
+    put: async (url, data, requireAuth = true) => {
+        const headers = requireAuth ? apiClient.getAuthHeaders() : {
+            'Content-Type': 'application/json',
+        }
+
+        console.log(`📤 PUT ${url} - RequireAuth: ${requireAuth}`, { headers: Object.keys(headers) })
+
+        const response = await fetch(`${API_BASE_URL}${url}`, {
+            method: 'PUT',
+            headers,
+            body: JSON.stringify(data)
+        })
+
+        if (!response.ok) {
+            console.error(`❌ PUT ${url} failed:`, response.status, response.statusText)
+        }
+
+        return { data: await response.json() }
+    },
+
+    delete: async (url, requireAuth = true) => {
+        const headers = requireAuth ? apiClient.getAuthHeaders() : {
+            'Content-Type': 'application/json',
+        }
+
+        console.log(`📤 DELETE ${url} - RequireAuth: ${requireAuth}`, { headers: Object.keys(headers) })
+
+        const response = await fetch(`${API_BASE_URL}${url}`, {
+            method: 'DELETE',
+            headers
+        })
+
+        if (!response.ok) {
+            console.error(`❌ DELETE ${url} failed:`, response.status, response.statusText)
+        }
+
         return { data: await response.json() }
     }
 }
@@ -37,10 +113,29 @@ export const authService = {
             console.log('Login response:', response.data)
 
             if (response.data.success) {
-                return {
-                    success: true,
-                    data: response.data.data,
-                    message: 'Đăng nhập thành công!'
+                // ✅ Backend trả về accessToken, không phải token
+                const token = response.data.data.accessToken  // ← Đây là key đúng!
+                const user = response.data.data.user
+
+                console.log('🔑 Extracted token:', token ? `${token.substring(0, 20)}...` : 'NULL')
+                console.log('👤 Extracted user:', user)
+
+                if (token) {
+                    localStorage.setItem('authToken', token)
+                    localStorage.setItem('userData', JSON.stringify(user))
+                    console.log('✅ Token saved to localStorage:', token.substring(0, 20) + '...')
+
+                    return {
+                        success: true,
+                        data: { token, user },
+                        message: 'Đăng nhập thành công!'
+                    }
+                } else {
+                    console.error('❌ No accessToken found in response!')
+                    return {
+                        success: false,
+                        message: 'Không nhận được token từ server!'
+                    }
                 }
             }
 
@@ -104,9 +199,19 @@ export const authService = {
             console.log('Verify OTP response:', response.data)
 
             if (response.data.success) {
+                // ✅ Backend trả về accessToken, không phải token
+                const token = response.data.data.accessToken  // ← Đây là key đúng!
+                const user = response.data.data.user
+
+                if (token) {
+                    localStorage.setItem('authToken', token)
+                    localStorage.setItem('userData', JSON.stringify(user))
+                    console.log('✅ Token saved to localStorage:', token.substring(0, 20) + '...')
+                }
+
                 return {
                     success: true,
-                    data: response.data.data,
+                    data: { token, user },
                     message: 'Xác thực email thành công!'
                 }
             }
@@ -194,9 +299,10 @@ export const authService = {
                     }
                 }
 
-                // Store in localStorage
+                // Store in localStorage - ✅ Lưu ngay lập tức
                 localStorage.setItem('authToken', token)
                 localStorage.setItem('userData', JSON.stringify(user))
+                console.log('✅ Google callback - Token saved:', token.substring(0, 20) + '...')
 
                 console.log('✅ Google callback successful!')
                 return {
@@ -222,5 +328,30 @@ export const authService = {
                 error: error.message
             }
         }
+    },
+
+    // Get user profile (example of authenticated request)
+    getProfile: async () => {
+        try {
+            const response = await apiClient.get('/auth/profile', true)
+            return response.data
+        } catch (error) {
+            console.error('Get profile error:', error)
+            throw error
+        }
+    },
+
+    // Update user profile (example of authenticated request)
+    updateProfile: async (userData) => {
+        try {
+            const response = await apiClient.put('/auth/profile', userData, true)
+            return response.data
+        } catch (error) {
+            console.error('Update profile error:', error)
+            throw error
+        }
     }
 }
+
+// Export apiClient for use in other services
+export { apiClient }

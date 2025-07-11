@@ -1,15 +1,71 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { ROUTES } from '../../routes/index.js'
 import { logout } from '../../store/slices/authSlice.js'
+import { fetchCart, selectCartTotalItems, selectCartLoading, selectCartError } from '../../store/slices/cartSlice.js'
 import logoApp from '../../assets/images/logoApp.png'
-import SearchDialog from './SearchDialog' // ← THÊM IMPORT
+import SearchDialog from './SearchDialog'
 
 function Header() {
     const dispatch = useDispatch()
     const { user, isAuthenticated } = useSelector((state) => state.auth)
+    const cartTotalItems = useSelector(selectCartTotalItems)
+    const cartLoading = useSelector(selectCartLoading)
+    const cartError = useSelector(selectCartError)
     const [isMenuOpen, setIsMenuOpen] = useState(false)
-    const [isSearchOpen, setIsSearchOpen] = useState(false) // ← THÊM STATE
+    const [isSearchOpen, setIsSearchOpen] = useState(false)
+
+    // ✅ Fetch cart khi user authenticated và refresh định kỳ
+    useEffect(() => {
+        if (isAuthenticated) {
+            console.log('🛒 Header - Fetching cart on auth change');
+            dispatch(fetchCart());
+        }
+    }, [isAuthenticated, dispatch]);
+
+    // ✅ Refresh cart mỗi 30 giây khi user authenticated
+    useEffect(() => {
+        if (!isAuthenticated) return;
+
+        const refreshCart = () => {
+            console.log('🔄 Header - Auto refreshing cart');
+            dispatch(fetchCart());
+        };
+
+        // Refresh ngay lập tức
+        refreshCart();
+
+        // Setup interval refresh
+        const interval = setInterval(refreshCart, 30000); // 30 seconds
+
+        return () => {
+            clearInterval(interval);
+        };
+    }, [isAuthenticated, dispatch]);
+
+    // ✅ Refresh cart khi window focus (user quay lại tab)
+    useEffect(() => {
+        if (!isAuthenticated) return;
+
+        const handleFocus = () => {
+            console.log('🔄 Header - Refreshing cart on window focus');
+            dispatch(fetchCart());
+        };
+
+        window.addEventListener('focus', handleFocus);
+
+        return () => {
+            window.removeEventListener('focus', handleFocus);
+        };
+    }, [isAuthenticated, dispatch]);
+
+    // ✅ Manual refresh cart function
+    const handleCartClick = () => {
+        if (isAuthenticated) {
+            console.log('🛒 Header - Manual cart refresh on click');
+            dispatch(fetchCart());
+        }
+    };
 
     const handleLogout = () => {
         dispatch(logout())
@@ -20,7 +76,6 @@ function Header() {
         setIsMenuOpen(!isMenuOpen)
     }
 
-    // ← THÊM FUNCTIONS
     const openSearch = () => {
         setIsSearchOpen(true)
     }
@@ -28,6 +83,14 @@ function Header() {
     const closeSearch = () => {
         setIsSearchOpen(false)
     }
+
+    // ✅ Log để debug
+    console.log('🛒 Header - Cart state:', {
+        cartTotalItems,
+        cartLoading,
+        cartError,
+        isAuthenticated
+    });
 
     return (
         <>
@@ -67,7 +130,7 @@ function Header() {
 
                         {/* User Actions */}
                         <div className="hidden md:flex items-center space-x-4">
-                            {/* Search - CẬP NHẬT */}
+                            {/* Search */}
                             <button
                                 onClick={openSearch}
                                 className="text-gray-300 hover:text-primary transition-colors"
@@ -77,17 +140,38 @@ function Header() {
                                 </svg>
                             </button>
 
-                            {/* Cart */}
-                            <button className="text-gray-300 hover:text-primary transition-colors relative">
+                            {/* ✅ Cart - CẬP NHẬT với onClick handler */}
+                            <button
+                                onClick={handleCartClick}
+                                className="text-gray-300 hover:text-primary transition-colors relative"
+                                title="Giỏ hàng (Click để refresh)"
+                            >
                                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13v6a2 2 0 002 2h6a2 2 0 002-2v-6" />
                                 </svg>
-                                <span className="absolute -top-2 -right-2 bg-primary text-black text-xs w-4 h-4 rounded-full flex items-center justify-center">
-                                    0
-                                </span>
+
+                                {/* ✅ Loading indicator */}
+                                {cartLoading && (
+                                    <span className="absolute -top-1 -right-1 w-3 h-3">
+                                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                                        <span className="relative inline-flex rounded-full h-3 w-3 bg-primary"></span>
+                                    </span>
+                                )}
+
+                                {/* ✅ Cart count badge */}
+                                {!cartLoading && cartTotalItems > 0 && (
+                                    <span className="absolute -top-2 -right-2 bg-primary text-black text-xs w-5 h-5 rounded-full flex items-center justify-center font-medium">
+                                        {cartTotalItems > 99 ? '99+' : cartTotalItems}
+                                    </span>
+                                )}
+
+                                {/* ✅ Error indicator */}
+                                {cartError && (
+                                    <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full" title="Lỗi load giỏ hàng"></span>
+                                )}
                             </button>
 
-                            {/* User Menu - GIỮ NGUYÊN */}
+                            {/* User Menu */}
                             {isAuthenticated ? (
                                 <div className="relative">
                                     <button
@@ -139,7 +223,7 @@ function Header() {
 
                         {/* Mobile menu button */}
                         <div className="md:hidden flex items-center space-x-2">
-                            {/* Mobile Search Button - THÊM */}
+                            {/* Mobile Search Button */}
                             <button
                                 onClick={openSearch}
                                 className="text-gray-300 hover:text-primary transition-colors"
@@ -147,6 +231,29 @@ function Header() {
                                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                                 </svg>
+                            </button>
+
+                            {/* ✅ Mobile Cart Button - CẬP NHẬT */}
+                            <button
+                                onClick={handleCartClick}
+                                className="text-gray-300 hover:text-primary transition-colors relative"
+                                title="Giỏ hàng (Click để refresh)"
+                            >
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13v6a2 2 0 002 2h6a2 2 0 002-2v-6" />
+                                </svg>
+
+                                {/* Loading indicator */}
+                                {cartLoading && (
+                                    <span className="absolute -top-1 -right-1 w-2 h-2 bg-primary rounded-full animate-pulse"></span>
+                                )}
+
+                                {/* Cart count badge */}
+                                {!cartLoading && cartTotalItems > 0 && (
+                                    <span className="absolute -top-2 -right-2 bg-primary text-black text-xs w-4 h-4 rounded-full flex items-center justify-center font-medium">
+                                        {cartTotalItems > 9 ? '9+' : cartTotalItems}
+                                    </span>
+                                )}
                             </button>
 
                             {/* Mobile Menu Button */}
@@ -161,7 +268,7 @@ function Header() {
                         </div>
                     </div>
 
-                    {/* Mobile Navigation - GIỮ NGUYÊN */}
+                    {/* Mobile Navigation */}
                     {isMenuOpen && (
                         <div className="md:hidden border-t border-gray-800">
                             <div className="px-2 pt-2 pb-3 space-y-1">
@@ -209,7 +316,7 @@ function Header() {
                 </div>
             </header>
 
-            {/* Search Dialog - THÊM */}
+            {/* Search Dialog */}
             <SearchDialog
                 isOpen={isSearchOpen}
                 onClose={closeSearch}

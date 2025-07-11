@@ -9,8 +9,8 @@ export const loginUser = createAsyncThunk(
         try {
             const result = await authService.login(userName, password)
             if (result.success) {
-                localStorage.setItem('authToken', result.data.token)
-                localStorage.setItem('userData', JSON.stringify(result.data.user || result.data))
+                // localStorage.setItem('authToken', result.data.token)
+                // localStorage.setItem('userData', JSON.stringify(result.data.user || result.data))
                 return result.data
             } else {
                 return rejectWithValue(result.message)
@@ -43,8 +43,8 @@ export const verifyOtp = createAsyncThunk(
         try {
             const result = await authService.verifyOtp(email, otp)
             if (result.success) {
-                localStorage.setItem('authToken', result.data.token)
-                localStorage.setItem('userData', JSON.stringify(result.data.user || result.data))
+                // localStorage.setItem('authToken', result.data.token)
+                // localStorage.setItem('userData', JSON.stringify(result.data.user || result.data))
                 return result.data
             } else {
                 return rejectWithValue(result.message)

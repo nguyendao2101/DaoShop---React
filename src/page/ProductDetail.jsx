@@ -1,4 +1,3 @@
-// src/page/ProductDetail.jsx
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from '@tanstack/react-router';
 import { useDispatch, useSelector } from 'react-redux';
@@ -14,6 +13,13 @@ import {
     clearSelectedProduct,
     clearRelatedProducts
 } from '../store/slices/productSlice';
+import {
+    addToCart,
+    optimisticAddToCart,
+    selectCartLoading
+} from '../store/slices/cartSlice';
+// ← ADD: Missing logout import
+import { logout } from '../store/slices/authSlice';
 import Header from '../components/layout/Header';
 import Footer from '../components/layout/Footer';
 import RelatedProducts from '../components/layout/RelatedProducts';
@@ -29,10 +35,15 @@ const ProductDetail = () => {
     const product = useSelector(selectSelectedProduct);
     const loading = useSelector(selectSelectedProductLoading);
     const error = useSelector(selectSelectedProductError);
-    // Fetch related products
+
+    // Related products
     const relatedProducts = useSelector(selectRelatedProducts);
     const relatedLoading = useSelector(selectRelatedLoading);
     const relatedError = useSelector(selectRelatedError);
+
+    // Cart state
+    const { isAuthenticated } = useSelector(state => state.auth);
+    const cartLoading = useSelector(selectCartLoading);
 
     // Component state
     const [selectedImageIndex, setSelectedImageIndex] = useState(0);
@@ -50,12 +61,13 @@ const ProductDetail = () => {
             dispatch(clearRelatedProducts());
         };
     }, [dispatch, productId]);
+
     useEffect(() => {
         if (product && product.category) {
             dispatch(fetchRelatedProducts({
                 category: product.category,
                 currentProductId: product.id,
-                limit: 6 // Hiển thị tối đa 6 sản phẩm theo layout
+                limit: 6
             }));
         }
     }, [dispatch, product]);
@@ -94,32 +106,138 @@ const ProductDetail = () => {
         }
     };
 
-    const handleAddToCart = () => {
+    // ← FIXED: Better error handling with safe access to error.message
+    const handleAddToCart = async () => {
         if (!selectedSize) {
             alert('Vui lòng chọn size');
             return;
         }
 
-        console.log('Add to cart:', {
-            product: product,
-            size: selectedSize,
-            quantity: quantity
-        });
-        alert('Đã thêm vào giỏ hàng!');
+        if (!isAuthenticated) {
+            alert('Vui lòng đăng nhập để thêm vào giỏ hàng');
+            navigate({ to: '/auth' });
+            return;
+        }
+
+        try {
+            const sizeOptions = getSizeOptions();
+            const sizeIndex = sizeOptions.findIndex(opt => opt.size === selectedSize.size);
+
+            // ✅ Sử dụng product.id thay vì product._id
+            const productIdToSend = product.id || product.productId || product._id;
+
+            console.log('🛒 ProductDetail - DETAILED DEBUG:', {
+                'product.id': product.id,
+                'product.productId': product.productId,
+                'product._id': product._id,
+                'productIdToSend': productIdToSend,
+                'sizeIndex': sizeIndex,
+                'quantity': quantity,
+                'selectedSize': selectedSize,
+                'allProductKeys': Object.keys(product),
+                'authToken': localStorage.getItem('authToken') ? 'EXISTS' : 'MISSING'
+            });
+
+            // Check if user still authenticated
+            const token = localStorage.getItem('authToken');
+            if (!token) {
+                alert('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
+                dispatch(logout());
+                navigate({ to: '/auth' });
+                return;
+            }
+
+            // ✅ Gửi đúng productId mà backend expect
+            const result = await dispatch(addToCart({
+                productId: productIdToSend,  // ← Đây là key quan trọng
+                sizeIndex,
+                quantity: quantity
+            })).unwrap();
+
+            console.log('🛒 ProductDetail - Add to cart success:', result);
+            alert(`Đã thêm ${quantity} sản phẩm vào giỏ hàng!`);
+            setQuantity(1);
+
+        } catch (error) {
+            console.error('🛒 ProductDetail - Add to cart error:', error);
+
+            const errorMessage = error?.message || error?.toString() || 'Unknown error';
+
+            // Handle specific error types
+            if (errorMessage.includes('Product not found')) {
+                alert(`Lỗi: Không tìm thấy sản phẩm. ProductId gửi: ${productIdToSend || 'undefined'}`);
+            } else if (errorMessage.includes('Authentication failed') ||
+                errorMessage.includes('Invalid or expired token') ||
+                errorMessage.includes('Invalid token') ||
+                errorMessage.includes('jwt malformed')) {
+
+                alert('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
+                localStorage.removeItem('authToken');
+                dispatch(logout());
+                navigate({ to: '/auth' });
+            } else if (errorMessage.includes('Authentication token not found')) {
+                alert('Vui lòng đăng nhập để thêm vào giỏ hàng.');
+                navigate({ to: '/auth' });
+            } else {
+                alert(`Có lỗi xảy ra: ${errorMessage}`);
+            }
+        }
     };
 
-    const handleBuyNow = () => {
+    const handleBuyNow = async () => {
         if (!selectedSize) {
             alert('Vui lòng chọn size');
             return;
         }
 
-        console.log('Buy now:', {
-            product: product,
-            size: selectedSize,
-            quantity: quantity
-        });
-        alert('Chuyển đến trang thanh toán!');
+        if (!isAuthenticated) {
+            alert('Vui lòng đăng nhập để mua hàng');
+            navigate({ to: '/auth' });
+            return;
+        }
+
+        try {
+            const sizeOptions = getSizeOptions();
+            const sizeIndex = sizeOptions.findIndex(opt => opt.size === selectedSize.size);
+
+            // Check if user still authenticated
+            const token = localStorage.getItem('authToken');
+            if (!token) {
+                alert('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
+                dispatch(logout());
+                navigate({ to: '/auth' });
+                return;
+            }
+
+            // Add to cart first
+            await dispatch(addToCart({
+                productId: product._id,
+                sizeIndex,
+                quantity: quantity
+            })).unwrap();
+
+            // Navigate to checkout (will implement later)
+            alert('Sản phẩm đã được thêm vào giỏ hàng! Chức năng checkout đang phát triển.');
+            // navigate({ to: '/checkout' });
+        } catch (error) {
+            console.error('🛒 ProductDetail - Buy now error:', error);
+
+            // ← FIXED: Safe error message handling
+            const errorMessage = error?.message || error?.toString() || 'Unknown error';
+
+            if (errorMessage.includes('Authentication failed') ||
+                errorMessage.includes('Invalid or expired token') ||
+                errorMessage.includes('Invalid token') ||
+                errorMessage.includes('jwt malformed')) {
+
+                alert('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
+                localStorage.removeItem('authToken');
+                dispatch(logout());
+                navigate({ to: '/auth' });
+            } else {
+                alert(`Có lỗi xảy ra: ${errorMessage}`);
+            }
+        }
     };
 
     const handleGoHome = () => {
@@ -397,21 +515,23 @@ const ProductDetail = () => {
                             <div className="flex space-x-4 pt-4">
                                 <button
                                     onClick={handleAddToCart}
-                                    disabled={!selectedSize || selectedSize.stock === 0}
+                                    disabled={!selectedSize || selectedSize.stock === 0 || cartLoading}
                                     className="flex-1 border-2 border-primary text-primary px-6 py-3 rounded-lg font-semibold hover:bg-primary hover:text-black transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
-                                    Thêm vào giỏ hàng
+                                    {cartLoading ? 'Đang thêm...' : 'Thêm vào giỏ hàng'}
                                 </button>
                                 <button
                                     onClick={handleBuyNow}
-                                    disabled={!selectedSize || selectedSize.stock === 0}
+                                    disabled={!selectedSize || selectedSize.stock === 0 || cartLoading}
                                     className="flex-1 bg-primary text-black px-6 py-3 rounded-lg font-semibold hover:opacity-80 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
-                                    Mua ngay
+                                    {cartLoading ? 'Đang xử lý...' : 'Mua ngay'}
                                 </button>
                             </div>
                         </div>
                     </div>
+
+                    {/* Product Description Section */}
                     <div className="border-t border-gray-800 pt-12 mb-16">
                         <div className="max-w-4xl">
                             <div className="flex items-center justify-between mb-6">
@@ -439,7 +559,8 @@ const ProductDetail = () => {
                             </div>
                         </div>
                     </div>
-                    {/* Product Description */}
+
+                    {/* Related Products */}
                     <div className="border-t border-gray-800 pt-12">
                         <div className="flex items-center justify-between mb-6">
                             <h2 className="text-2xl font-bold">
