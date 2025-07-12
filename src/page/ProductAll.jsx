@@ -85,7 +85,7 @@ const ProductAll = () => {
             apiParams.sortBy = filters.sortBy;
         }
 
-        console.log('🔥 Built API params:', apiParams);
+        console.log('Built API params:', apiParams);
         return apiParams;
     }, [currentPage, filters]);
 
@@ -118,27 +118,27 @@ const ProductAll = () => {
         if (!isSearchMode) return [];
 
         let filtered = [...searchResults];
-        console.log('🔥 Processing search results, initial count:', filtered.length);
+        console.log('Processing search results, initial count:', filtered.length);
 
         // Apply filters
         if (filters.category && filters.category !== '') {
             filtered = filtered.filter(product => product.category === filters.category);
-            console.log('🔥 After category filter:', filtered.length);
+            console.log('After category filter:', filtered.length);
         }
 
         if (filters.material && filters.material !== '') {
             filtered = filtered.filter(product => product.material === filters.material);
-            console.log('🔥 After material filter:', filtered.length);
+            console.log('After material filter:', filtered.length);
         }
 
         if (filters.karat && filters.karat !== '') {
             filtered = filtered.filter(product => product.karat === filters.karat);
-            console.log('🔥 After karat filter:', filtered.length);
+            console.log('After karat filter:', filtered.length);
         }
 
         if (filters.gender && filters.gender !== '') {
             filtered = filtered.filter(product => product.gender === filters.gender);
-            console.log('🔥 After gender filter:', filtered.length);
+            console.log('After gender filter:', filtered.length);
         }
 
         // Price filter - IMPROVED LOGIC
@@ -206,7 +206,7 @@ const ProductAll = () => {
     useEffect(() => {
         if (!isSearchMode) {
             const apiParams = buildAPIParams();
-            console.log('🔥 Fetching paginated products:', apiParams);
+            console.log('Fetching paginated products:', apiParams);
             dispatch(fetchAllProducts(apiParams));
         }
     }, [dispatch, buildAPIParams, isSearchMode]);
@@ -214,14 +214,14 @@ const ProductAll = () => {
     // Fetch all products cache on mount (cho search và filter options)
     useEffect(() => {
         if (allProductsCache.length === 0) {
-            console.log('🔥 Loading all products cache...');
+            console.log('Loading all products cache...');
             dispatch(fetchAllProductsForSearch());
         }
     }, [dispatch, allProductsCache.length]);
 
     // Handle search
     const handleSearch = useCallback((term) => {
-        console.log('🔥 ProductAll handleSearch:', term);
+        console.log('ProductAll handleSearch:', term);
         dispatch(setSearchTerm(term));
         dispatch(setCurrentPage(1));
 
@@ -234,13 +234,13 @@ const ProductAll = () => {
 
     // Handle filter change
     const handleFilterChange = useCallback((newFilters) => {
-        console.log('🔥 ProductAll handleFilterChange:', newFilters);
+        console.log('ProductAll handleFilterChange:', newFilters);
         dispatch(setFilters(newFilters));
     }, [dispatch]);
 
     // Handle sort change
     const handleSortChange = useCallback((sortBy) => {
-        console.log('🔥 ProductAll handleSortChange:', sortBy);
+        console.log('ProductAll handleSortChange:', sortBy);
         dispatch(setFilters({ ...filters, sortBy }));
     }, [dispatch, filters]);
 

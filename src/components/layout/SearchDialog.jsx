@@ -378,15 +378,6 @@ const SearchDialog = ({ isOpen, onClose }) => {
                                     ))}
                                 </div>
                             </div>
-
-                            {/* Debug Info */}
-                            {/* {process.env.NODE_ENV === 'development' && (
-                                <div className="mt-6 pt-4 border-t border-gray-700 text-xs text-gray-500">
-                                    <div>Cache: {allProductsCache.length} products</div>
-                                    <div>Search results: {searchResults.length} products</div>
-                                    <div>Loading: {searchLoading ? 'Yes' : 'No'}</div>
-                                </div>
-                            )} */}
                         </div>
                     )}
                 </div>

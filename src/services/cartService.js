@@ -4,7 +4,7 @@ export const cartService = {
     // ← FIX: Always include Authorization header
     getAuthHeaders: () => {
         const token = localStorage.getItem('authToken');
-        console.log('🔑 Cart Service - Getting auth headers, token:', token ? `${token.substring(0, 20)}...` : 'MISSING');
+        console.log('Cart Service - Getting auth headers, token:', token ? `${token.substring(0, 20)}...` : 'MISSING');
 
         const headers = {
             'Content-Type': 'application/json'
@@ -12,9 +12,9 @@ export const cartService = {
 
         if (token && token !== 'undefined') {
             headers['Authorization'] = `Bearer ${token}`;
-            console.log('🔑 Cart Service - Authorization header added');
+            console.log('Cart Service - Authorization header added');
         } else {
-            console.warn('🔑 Cart Service - No valid token found for authorization');
+            console.warn('Cart Service - No valid token found for authorization');
         }
 
         return headers;
@@ -23,14 +23,14 @@ export const cartService = {
     // Get cart
     getCart: async () => {
         try {
-            console.log('🛒 Cart Service - Getting cart...');
+            console.log('Cart Service - Getting cart...');
 
             const response = await fetch(`${API_BASE_URL}/cart`, {
                 method: 'GET',
                 headers: cartService.getAuthHeaders()
             });
 
-            console.log('🛒 Cart Service - Get cart response status:', response.status);
+            console.log('Cart Service - Get cart response status:', response.status);
 
             if (!response.ok) {
                 if (response.status === 403 || response.status === 401) {
@@ -40,10 +40,10 @@ export const cartService = {
             }
 
             const data = await response.json();
-            console.log('🛒 Cart Service - Get cart success:', data);
+            console.log('Cart Service - Get cart success:', data);
             return data;
         } catch (error) {
-            console.error('🛒 Cart Service - Get cart error:', error);
+            console.error('Cart Service - Get cart error:', error);
             throw error;
         }
     },
@@ -62,7 +62,7 @@ export const cartService = {
             });
 
             const headers = cartService.getAuthHeaders();
-            console.log('🛒 Cart Service - Headers:', JSON.stringify(headers, null, 2));
+            console.log('Cart Service - Headers:', JSON.stringify(headers, null, 2));
 
             // Kiểm tra token có trong header không
             const hasAuthHeader = headers.Authorization && headers.Authorization.startsWith('Bearer ');
@@ -79,8 +79,8 @@ export const cartService = {
                 quantity
             };
 
-            console.log('🛒 Cart Service - Request URL:', `${API_BASE_URL}/cart/add`);
-            console.log('🛒 Cart Service - Request body:', JSON.stringify(requestBody, null, 2));
+            console.log('Cart Service - Request URL:', `${API_BASE_URL}/cart/add`);
+            console.log('Cart Service - Request body:', JSON.stringify(requestBody, null, 2));
 
             const response = await fetch(`${API_BASE_URL}/cart/add`, {
                 method: 'POST',
@@ -88,12 +88,12 @@ export const cartService = {
                 body: JSON.stringify(requestBody)
             });
 
-            console.log('🛒 Cart Service - Response status:', response.status);
-            console.log('🛒 Cart Service - Response headers:', Object.fromEntries(response.headers.entries()));
+            console.log('Cart Service - Response status:', response.status);
+            console.log('Cart Service - Response headers:', Object.fromEntries(response.headers.entries()));
 
             if (!response.ok) {
                 const errorText = await response.text();
-                console.error('🛒 Cart Service - Error response:', errorText);
+                console.error('Cart Service - Error response:', errorText);
 
                 if (response.status === 403 || response.status === 401) {
                     throw new Error('Authentication failed - please login again');
@@ -102,10 +102,10 @@ export const cartService = {
             }
 
             const data = await response.json();
-            console.log('🛒 Cart Service - Add to cart success:', data);
+            console.log('Cart Service - Add to cart success:', data);
             return data;
         } catch (error) {
-            console.error('🛒 Cart Service - Add to cart error:', error);
+            console.error('Cart Service - Add to cart error:', error);
             throw error;
         }
     },

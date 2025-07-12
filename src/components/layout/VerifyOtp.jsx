@@ -194,7 +194,7 @@ function VerifyOtp({ email, onSuccess, onBack }) {
                     >
                         {resendCooldown > 0
                             ? `Gửi lại sau ${resendCooldown}s`
-                            : '🔄 Gửi lại mã OTP'
+                            : 'Gửi lại mã OTP'
                         }
                     </button>
 

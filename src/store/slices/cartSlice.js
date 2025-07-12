@@ -136,12 +136,12 @@ const cartSlice = createSlice({
                 state.totalItems = action.payload?.totalItems || 0;
                 state.totalAmount = action.payload?.totalAmount || 0;
                 state.items = action.payload?.items || [];
-                console.log('🛒 Redux - Cart fetched:', action.payload);
+                console.log('Redux - Cart fetched:', action.payload);
             })
             .addCase(fetchCart.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload;
-                console.error('🛒 Redux - Fetch cart error:', action.payload);
+                console.error('Redux - Fetch cart error:', action.payload);
             })
 
             // Add to Cart
@@ -155,12 +155,12 @@ const cartSlice = createSlice({
                 state.totalItems = action.payload?.totalItems || 0;
                 state.totalAmount = action.payload?.totalAmount || 0;
                 state.items = action.payload?.items || [];
-                console.log('🛒 Redux - Item added to cart:', action.payload);
+                console.log('Redux - Item added to cart:', action.payload);
             })
             .addCase(addToCart.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload;
-                console.error('🛒 Redux - Add to cart error:', action.payload);
+                console.error('Redux - Add to cart error:', action.payload);
             })
 
             // Update Cart Item
@@ -174,12 +174,12 @@ const cartSlice = createSlice({
                 state.totalItems = action.payload?.totalItems || 0;
                 state.totalAmount = action.payload?.totalAmount || 0;
                 state.items = action.payload?.items || [];
-                console.log('🛒 Redux - Cart item updated:', action.payload);
+                console.log('Redux - Cart item updated:', action.payload);
             })
             .addCase(updateCartItem.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload;
-                console.error('🛒 Redux - Update cart error:', action.payload);
+                console.error('Redux - Update cart error:', action.payload);
             })
 
             // Remove from Cart
@@ -193,12 +193,12 @@ const cartSlice = createSlice({
                 state.totalItems = action.payload?.totalItems || 0;
                 state.totalAmount = action.payload?.totalAmount || 0;
                 state.items = action.payload?.items || [];
-                console.log('🛒 Redux - Item removed from cart:', action.payload);
+                console.log('Redux - Item removed from cart:', action.payload);
             })
             .addCase(removeFromCart.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload;
-                console.error('🛒 Redux - Remove from cart error:', action.payload);
+                console.error('Redux - Remove from cart error:', action.payload);
             })
 
             // Clear Cart
@@ -212,12 +212,12 @@ const cartSlice = createSlice({
                 state.totalItems = 0;
                 state.totalAmount = 0;
                 state.items = [];
-                console.log('🛒 Redux - Cart cleared:', action.payload);
+                console.log('Redux - Cart cleared:', action.payload);
             })
             .addCase(clearCart.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload;
-                console.error('🛒 Redux - Clear cart error:', action.payload);
+                console.error('Redux - Clear cart error:', action.payload);
             })
             .addCase(logout, (state) => {
                 state.cart = null;

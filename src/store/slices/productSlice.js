@@ -49,8 +49,8 @@ export const fetchAllProducts = createAsyncThunk(
             queryParams.append('sortOrder', backendSort.sortOrder);
 
             const url = `${API_BASE_URL}/products?${queryParams.toString()}`;
-            console.log('🔥 Fetching paginated products URL:', url);
-            console.log('🔥 Sort mapping:', { frontend: sortBy, backend: backendSort });
+            console.log('Fetching paginated products URL:', url);
+            console.log('Sort mapping:', { frontend: sortBy, backend: backendSort });
 
             const response = await fetch(url);
             if (!response.ok) {
@@ -59,10 +59,10 @@ export const fetchAllProducts = createAsyncThunk(
             const data = await response.json();
 
             // DEBUG: Log API response
-            console.log('🔥 API Response - Success:', data.success);
-            console.log('🔥 API Response - Data count:', data.data?.length || 0);
-            console.log('🔥 API Response - Pagination:', data.pagination);
-            console.log('🔥 API Response - Sample product prices:',
+            console.log('API Response - Success:', data.success);
+            console.log('API Response - Data count:', data.data?.length || 0);
+            console.log('API Response - Pagination:', data.pagination);
+            console.log('API Response - Sample product prices:',
                 data.data?.slice(0, 3).map(p => ({
                     name: p.nameProduct,
                     sizePrice: p.sizePrice,
@@ -75,7 +75,7 @@ export const fetchAllProducts = createAsyncThunk(
             }
             return data;
         } catch (error) {
-            console.error('🔥 Error fetching products:', error);
+            console.error('Error fetching products:', error);
             return rejectWithValue(error.message);
         }
     }
@@ -86,7 +86,7 @@ export const fetchAllProductsForSearch = createAsyncThunk(
     'products/fetchAllForSearch',
     async (_, { rejectWithValue }) => {
         try {
-            console.log('🔥 Fetching all products for search...');
+            console.log('Fetching all products for search...');
             const response = await fetch(`${API_BASE_URL}/products?limit=1000`);
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
@@ -95,10 +95,10 @@ export const fetchAllProductsForSearch = createAsyncThunk(
             if (!data.success) {
                 throw new Error('Failed to fetch all products');
             }
-            console.log('🔥 All products loaded:', data.data?.length || 0);
+            console.log('All products loaded:', data.data?.length || 0);
             return data.data;
         } catch (error) {
-            console.error('🔥 Error fetching all products:', error);
+            console.error('Error fetching all products:', error);
             return rejectWithValue(error.message);
         }
     }
@@ -109,13 +109,13 @@ export const searchAllProducts = createAsyncThunk(
     'products/searchAll',
     async (searchTerm, { getState, rejectWithValue }) => {
         try {
-            console.log('🔥 Searching with term:', searchTerm);
+            console.log('Searching with term:', searchTerm);
             const state = getState();
             let allProducts = state.products.allProductsCache;
 
             // Nếu chưa có cache, fetch all products
             if (!allProducts.length) {
-                console.log('🔥 No cache, fetching all products first...');
+                console.log('No cache, fetching all products first...');
                 const response = await fetch(`${API_BASE_URL}/products?limit=1000`);
                 if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
                 const data = await response.json();
@@ -136,14 +136,14 @@ export const searchAllProducts = createAsyncThunk(
                 );
             });
 
-            console.log('🔥 Search results:', filteredProducts.length);
+            console.log('Search results:', filteredProducts.length);
             return {
                 products: filteredProducts,
                 searchTerm: searchTerm,
                 allProducts: allProducts // Cập nhật cache
             };
         } catch (error) {
-            console.error('🔥 Search error:', error);
+            console.error('Search error:', error);
             return rejectWithValue(error.message);
         }
     }
@@ -293,7 +293,7 @@ const productSlice = createSlice({
     initialState,
     reducers: {
         setFilters: (state, action) => {
-            console.log('🔥 Redux setFilters:', action.payload);
+            console.log('Redux setFilters:', action.payload);
             state.filters = { ...state.filters, ...action.payload };
             state.currentPage = 1; // Reset page
             state.isSearchMode = false; // Thoát search mode khi filter

@@ -1,12 +1,12 @@
 import React from 'react';
 
 const FilterSidebar = ({ filters, onFilterChange, products = [] }) => {
-    console.log('🔥 FilterSidebar - Total products:', products.length);
-    console.log('🔥 FilterSidebar - Current filters:', filters);
+    console.log('FilterSidebar - Total products:', products.length);
+    console.log('FilterSidebar - Current filters:', filters);
 
     // DEBUG: Check price structure in products
     if (products.length > 0) {
-        console.log('🔥 Sample product price structure:', {
+        console.log('Sample product price structure:', {
             firstProduct: products[0]?.nameProduct,
             sizePrice: products[0]?.sizePrice,
             price: products[0]?.price,
@@ -51,7 +51,7 @@ const FilterSidebar = ({ filters, onFilterChange, products = [] }) => {
         extractedPrice: getProductPrice(product),
         rawSizePrice: product.sizePrice
     }));
-    console.log('🔥 Sample extracted prices:', samplePrices);
+    console.log('Sample extracted prices:', samplePrices);
 
     const categories = getUniqueValues('category');
     const materials = getUniqueValues('material');
@@ -68,12 +68,12 @@ const FilterSidebar = ({ filters, onFilterChange, products = [] }) => {
     ];
 
     const handleFilterChange = (newFilters) => {
-        console.log('🔥 FilterSidebar filter change:', newFilters);
+        console.log('FilterSidebar filter change:', newFilters);
         onFilterChange(newFilters);
     };
 
     const handleClearAll = () => {
-        console.log('🔥 FilterSidebar clear all');
+        console.log('FilterSidebar clear all');
         handleFilterChange({
             category: '',
             priceRange: [0, 100000000],
@@ -86,14 +86,14 @@ const FilterSidebar = ({ filters, onFilterChange, products = [] }) => {
 
     // Handle price range change with detailed logging
     const handlePriceRangeChange = (range) => {
-        console.log('🔥 Price range selected:', range);
-        console.log('🔥 Previous priceRange:', filters.priceRange);
+        console.log('Price range selected:', range);
+        console.log('Previous priceRange:', filters.priceRange);
 
         const newFilters = {
             ...filters,
             priceRange: [range.min, range.max]
         };
-        console.log('🔥 New filters with price range:', newFilters);
+        console.log('New filters with price range:', newFilters);
 
         handleFilterChange(newFilters);
     };
@@ -107,7 +107,7 @@ const FilterSidebar = ({ filters, onFilterChange, products = [] }) => {
     };
 
     const currentPriceRange = getCurrentPriceRange();
-    console.log('🔥 Current price range match:', currentPriceRange);
+    console.log('Current price range match:', currentPriceRange);
 
     return (
         <div className="w-64 bg-gray-900 rounded-lg p-6 space-y-6 h-fit sticky top-4">

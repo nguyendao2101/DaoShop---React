@@ -17,20 +17,20 @@ function Header() {
     const [isMenuOpen, setIsMenuOpen] = useState(false)
     const [isSearchOpen, setIsSearchOpen] = useState(false)
 
-    // ✅ Fetch cart khi user authenticated và refresh định kỳ
+    // Fetch cart khi user authenticated và refresh định kỳ
     useEffect(() => {
         if (isAuthenticated) {
-            console.log('🛒 Header - Fetching cart on auth change');
+            console.log('Header - Fetching cart on auth change');
             dispatch(fetchCart());
         }
     }, [isAuthenticated, dispatch]);
 
-    // ✅ Refresh cart mỗi 30 giây khi user authenticated
+    // Refresh cart mỗi 30 giây khi user authenticated
     useEffect(() => {
         if (!isAuthenticated) return;
 
         const refreshCart = () => {
-            console.log('🔄 Header - Auto refreshing cart');
+            console.log('Header - Auto refreshing cart');
             dispatch(fetchCart());
         };
 
@@ -45,12 +45,12 @@ function Header() {
         };
     }, [isAuthenticated, dispatch]);
 
-    // ✅ Refresh cart khi window focus (user quay lại tab)
+    // Refresh cart khi window focus (user quay lại tab)
     useEffect(() => {
         if (!isAuthenticated) return;
 
         const handleFocus = () => {
-            console.log('🔄 Header - Refreshing cart on window focus');
+            console.log('Header - Refreshing cart on window focus');
             dispatch(fetchCart());
         };
 
@@ -61,7 +61,7 @@ function Header() {
         };
     }, [isAuthenticated, dispatch]);
 
-    // ✅ Manual refresh cart function
+    // Manual refresh cart function
     const handleCartClick = () => {
         if (isAuthenticated) {
             console.log('Header - Navigating to cart page');
@@ -89,7 +89,7 @@ function Header() {
         setIsSearchOpen(false)
     }
 
-    // ✅ Log để debug
+    // og để debug
     console.log('🛒 Header - Cart state:', {
         cartTotalItems,
         cartLoading,

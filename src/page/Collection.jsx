@@ -34,7 +34,7 @@ const Collection = () => {
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 12;
 
-    console.log('🔥 Collection ID extracted:', collectionId);
+    console.log('Collection ID extracted:', collectionId);
 
     // Fetch collection data
     useEffect(() => {
@@ -49,11 +49,11 @@ const Collection = () => {
             setError(null);
 
             try {
-                console.log('🔥 Fetching collection:', collectionId);
+                console.log('Fetching collection:', collectionId);
                 const response = await fetch(`http://localhost:8797/api/collections/${collectionId}/products`);
                 const data = await response.json();
 
-                console.log('🔥 API Response:', data);
+                console.log('API Response:', data);
 
                 if (data.success) {
                     setCollection(data.data.collection);
@@ -62,7 +62,7 @@ const Collection = () => {
                     setError('Không thể tải dữ liệu bộ sưu tập');
                 }
             } catch (err) {
-                console.error('🔥 Error fetching collection:', err);
+                console.error('Error fetching collection:', err);
                 setError('Có lỗi xảy ra khi tải dữ liệu');
             } finally {
                 setLoading(false);

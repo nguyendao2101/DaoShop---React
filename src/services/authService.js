@@ -5,7 +5,7 @@ const API_BASE_URL = 'http://localhost:8797/api'
 const apiClient = {
     getAuthHeaders: () => {
         const token = localStorage.getItem('authToken')
-        console.log('🔍 Getting auth headers - Token:', token ? `${token.substring(0, 20)}...` : 'NULL')
+        console.log('Getting auth headers - Token:', token ? `${token.substring(0, 20)}...` : 'NULL')
 
         const headers = {
             'Content-Type': 'application/json',
@@ -13,9 +13,9 @@ const apiClient = {
 
         if (token) {
             headers['Authorization'] = `Bearer ${token}`
-            console.log('✅ Added Authorization header')
+            console.log('Added Authorization header')
         } else {
-            console.log('❌ No token found in localStorage')
+            console.log('No token found in localStorage')
         }
 
         return headers
@@ -26,7 +26,7 @@ const apiClient = {
             'Content-Type': 'application/json',
         }
 
-        console.log(`📤 POST ${url} - RequireAuth: ${requireAuth}`, { headers: Object.keys(headers) })
+        console.log(`POST ${url} - RequireAuth: ${requireAuth}`, { headers: Object.keys(headers) })
 
         const response = await fetch(`${API_BASE_URL}${url}`, {
             method: 'POST',
@@ -35,7 +35,7 @@ const apiClient = {
         })
 
         if (!response.ok) {
-            console.error(`❌ POST ${url} failed:`, response.status, response.statusText)
+            console.error(`POST ${url} failed:`, response.status, response.statusText)
         }
 
         return { data: await response.json() }
@@ -46,7 +46,7 @@ const apiClient = {
             'Content-Type': 'application/json',
         }
 
-        console.log(`📤 GET ${url} - RequireAuth: ${requireAuth}`, { headers: Object.keys(headers) })
+        console.log(`GET ${url} - RequireAuth: ${requireAuth}`, { headers: Object.keys(headers) })
 
         const response = await fetch(`${API_BASE_URL}${url}`, {
             method: 'GET',
@@ -54,7 +54,7 @@ const apiClient = {
         })
 
         if (!response.ok) {
-            console.error(`❌ GET ${url} failed:`, response.status, response.statusText)
+            console.error(`GET ${url} failed:`, response.status, response.statusText)
         }
 
         return { data: await response.json() }
@@ -65,7 +65,7 @@ const apiClient = {
             'Content-Type': 'application/json',
         }
 
-        console.log(`📤 PUT ${url} - RequireAuth: ${requireAuth}`, { headers: Object.keys(headers) })
+        console.log(`PUT ${url} - RequireAuth: ${requireAuth}`, { headers: Object.keys(headers) })
 
         const response = await fetch(`${API_BASE_URL}${url}`, {
             method: 'PUT',
@@ -74,7 +74,7 @@ const apiClient = {
         })
 
         if (!response.ok) {
-            console.error(`❌ PUT ${url} failed:`, response.status, response.statusText)
+            console.error(`PUT ${url} failed:`, response.status, response.statusText)
         }
 
         return { data: await response.json() }
@@ -85,7 +85,7 @@ const apiClient = {
             'Content-Type': 'application/json',
         }
 
-        console.log(`📤 DELETE ${url} - RequireAuth: ${requireAuth}`, { headers: Object.keys(headers) })
+        console.log(`DELETE ${url} - RequireAuth: ${requireAuth}`, { headers: Object.keys(headers) })
 
         const response = await fetch(`${API_BASE_URL}${url}`, {
             method: 'DELETE',
@@ -93,7 +93,7 @@ const apiClient = {
         })
 
         if (!response.ok) {
-            console.error(`❌ DELETE ${url} failed:`, response.status, response.statusText)
+            console.error(`DELETE ${url} failed:`, response.status, response.statusText)
         }
 
         return { data: await response.json() }
@@ -104,7 +104,7 @@ export const authService = {
     // Regular login
     login: async (userName, password) => {
         try {
-            console.log('🔄 Attempting login for:', userName)
+            console.log('Attempting login for:', userName)
             const response = await apiClient.post('/auth/login', {
                 userName,
                 password
@@ -113,7 +113,7 @@ export const authService = {
             console.log('Login response:', response.data)
 
             if (response.data.success) {
-                // ✅ Backend trả về accessToken, không phải token
+                // Backend trả về accessToken, không phải token
                 const token = response.data.data.accessToken  // ← Đây là key đúng!
                 const user = response.data.data.user
 
@@ -123,7 +123,7 @@ export const authService = {
                 if (token) {
                     localStorage.setItem('authToken', token)
                     localStorage.setItem('userData', JSON.stringify(user))
-                    console.log('✅ Token saved to localStorage:', token.substring(0, 20) + '...')
+                    console.log('Token saved to localStorage:', token.substring(0, 20) + '...')
 
                     return {
                         success: true,
@@ -131,7 +131,7 @@ export const authService = {
                         message: 'Đăng nhập thành công!'
                     }
                 } else {
-                    console.error('❌ No accessToken found in response!')
+                    console.error('No accessToken found in response!')
                     return {
                         success: false,
                         message: 'Không nhận được token từ server!'
@@ -199,14 +199,14 @@ export const authService = {
             console.log('Verify OTP response:', response.data)
 
             if (response.data.success) {
-                // ✅ Backend trả về accessToken, không phải token
+                // Backend trả về accessToken, không phải token
                 const token = response.data.data.accessToken  // ← Đây là key đúng!
                 const user = response.data.data.user
 
                 if (token) {
                     localStorage.setItem('authToken', token)
                     localStorage.setItem('userData', JSON.stringify(user))
-                    console.log('✅ Token saved to localStorage:', token.substring(0, 20) + '...')
+                    console.log('Token saved to localStorage:', token.substring(0, 20) + '...')
                 }
 
                 return {
@@ -232,7 +232,7 @@ export const authService = {
 
     // Google Login - Redirect to backend
     loginWithGoogle: () => {
-        console.log('🔄 Redirecting to Google OAuth...')
+        console.log('Redirecting to Google OAuth...')
         window.location.href = `${API_BASE_URL}/auth/google`
     },
 
@@ -243,7 +243,7 @@ export const authService = {
             const userStr = urlParams.get('user')
             const error = urlParams.get('error')
 
-            console.log('🔍 Google callback params:', {
+            console.log('Google callback params:', {
                 hasToken: !!token,
                 hasUser: !!userStr,
                 hasError: !!error,
@@ -259,7 +259,7 @@ export const authService = {
                 }
             }
 
-            // ✅ Chỉ cần có token là đủ
+            // Chỉ cần có token là đủ
             if (token) {
                 let user
 
@@ -274,7 +274,7 @@ export const authService = {
                     }
                 }
 
-                // ✅ Nếu không có user data, decode từ JWT token
+                // Nếu không có user data, decode từ JWT token
                 if (!user) {
                     try {
                         const tokenPayload = JSON.parse(atob(token.split('.')[1]))
@@ -288,7 +288,7 @@ export const authService = {
                         }
                         console.log('👤 User from token:', user)
                     } catch (decodeError) {
-                        console.error('❌ Failed to decode token:', decodeError)
+                        console.error('Failed to decode token:', decodeError)
                         // Fallback user object
                         user = {
                             userName: 'Google User',
@@ -299,12 +299,12 @@ export const authService = {
                     }
                 }
 
-                // Store in localStorage - ✅ Lưu ngay lập tức
+                // Store in localStorage - Lưu ngay lập tức
                 localStorage.setItem('authToken', token)
                 localStorage.setItem('userData', JSON.stringify(user))
-                console.log('✅ Google callback - Token saved:', token.substring(0, 20) + '...')
+                console.log('Google callback - Token saved:', token.substring(0, 20) + '...')
 
-                console.log('✅ Google callback successful!')
+                console.log('Google callback successful!')
                 return {
                     success: true,
                     data: { token, user },
@@ -312,8 +312,8 @@ export const authService = {
                 }
             }
 
-            // ✅ Không có token
-            console.error('❌ No token found in callback')
+            // Không có token
+            console.error('No token found in callback')
             return {
                 success: false,
                 message: 'Không nhận được token từ Google!',
@@ -321,7 +321,7 @@ export const authService = {
             }
 
         } catch (error) {
-            console.error('❌ Google callback processing error:', error)
+            console.error('Google callback processing error:', error)
             return {
                 success: false,
                 message: 'Xử lý callback Google thất bại!',

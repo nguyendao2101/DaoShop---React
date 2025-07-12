@@ -17,7 +17,7 @@ import { logout } from '../store/slices/authSlice.js'
 import Header from '../components/layout/Header.jsx'
 import Footer from '../components/layout/Footer.jsx'
 
-// ✅ API Base URL
+//API Base URL
 const API_BASE_URL = 'http://localhost:8797/api'
 
 const Cart = () => {
@@ -50,16 +50,16 @@ const Cart = () => {
         dispatch(fetchCart())
     }, [dispatch, isAuthenticated, navigate])
 
-    // ✅ Auto select all items when cart loads
+    //Auto select all items when cart loads
     useEffect(() => {
         if (cartItems && cartItems.length > 0) {
             const allItemKeys = cartItems.map(item => `${item.productId}_${item.sizeIndex}`)
             setSelectedItems(new Set(allItemKeys))
-            console.log('✅ Auto-selected all cart items:', allItemKeys)
+            console.log('Auto-selected all cart items:', allItemKeys)
         }
     }, [cartItems])
 
-    // ✅ Fetch product details - SEPARATE useEffect
+    // Fetch product details - SEPARATE useEffect
     useEffect(() => {
         const fetchProductDetails = async () => {
             if (!cartItems || cartItems.length === 0) return
@@ -79,12 +79,12 @@ const Cart = () => {
 
                     if (response.ok) {
                         const productData = await response.json()
-                        console.log(`✅ Product data for ${productId}:`, productData)
+                        console.log(`Product data for ${productId}:`, productData)
 
                         // Store the product data
                         detailsMap.set(productId, productData.data || productData)
                     } else {
-                        console.error(`❌ Failed to fetch product ${productId}:`, response.status)
+                        console.error(`Failed to fetch product ${productId}:`, response.status)
                     }
                 }
 
@@ -92,14 +92,14 @@ const Cart = () => {
                 setProductDetails(detailsMap)
 
             } catch (error) {
-                console.error('❌ Failed to fetch product details:', error)
+                console.error('Failed to fetch product details:', error)
             }
         }
 
         fetchProductDetails()
     }, [cartItems])
 
-    // ✅ Enhanced getProductInfo function
+    // Enhanced getProductInfo function
     const getProductInfo = (item) => {
         const productDetail = productDetails.get(item.productId)
 
@@ -119,13 +119,13 @@ const Cart = () => {
             'Object.values(productDetail?.sizePrice || {})': Object.values(productDetail?.sizePrice || {})
         })
 
-        // ✅ Helper function for getting first image (same as ProductCard)
+        // Helper function for getting first image (same as ProductCard)
         const getFirstImage = (productImg) => {
             if (!productImg) return null;
             return productImg["0"] || Object.values(productImg)[0];
         };
 
-        // ✅ Helper function for getting size info
+        // Helper function for getting size info
         const getSizeInfo = (sizePrice, sizeIndex) => {
             if (!sizePrice) return null;
             const sizeOptions = Object.values(sizePrice);
@@ -135,7 +135,7 @@ const Cart = () => {
         const firstImage = getFirstImage(productDetail?.productImg);
         const sizeInfo = getSizeInfo(productDetail?.sizePrice, item.sizeIndex);
 
-        console.log(`🖼️ IMAGE & SIZE INFO for ${item.productId}:`, {
+        console.log(`IMAGE & SIZE INFO for ${item.productId}:`, {
             firstImage,
             sizeInfo,
             imageFound: !!firstImage,
@@ -143,7 +143,7 @@ const Cart = () => {
         });
 
         return {
-            // ✅ Match với ProductCard structure
+            // Match với ProductCard structure
             name: productDetail?.nameProduct || productDetail?.name || `Sản phẩm ${item.productId}`,
             image: firstImage, // Use same logic as ProductCard
             description: productDetail?.description || '',
@@ -154,11 +154,11 @@ const Cart = () => {
             gender: productDetail?.gender || '',
             type: productDetail?.type || '',
 
-            // ✅ Size information
+            // Size information
             sizes: productDetail?.sizePrice ? Object.values(productDetail.sizePrice) : [],
             sizeName: sizeInfo?.size || `Size ${item.sizeIndex}`,
 
-            // ✅ Price information
+            // Price information
             originalPrice: sizeInfo?.price || item.price,
             discountPercent: productDetail?.discountPercent || 0,
             finalPrice: item.price, // This is the price stored in cart (already discounted)
@@ -173,7 +173,7 @@ const Cart = () => {
         }).format(price)
     }
 
-    // ✅ Calculate selected items totals
+    // Calculate selected items totals
     const getSelectedTotals = () => {
         const selectedCartItems = cartItems.filter(item =>
             selectedItems.has(`${item.productId}_${item.sizeIndex}`)
@@ -188,7 +188,7 @@ const Cart = () => {
         return { selectedCartItems, selectedTotalItems, selectedTotalAmount }
     }
 
-    // ✅ Handle single item checkbox
+    // Handle single item checkbox
     const handleItemSelect = (item) => {
         const itemKey = `${item.productId}_${item.sizeIndex}`
         const newSelectedItems = new Set(selectedItems)
@@ -203,17 +203,17 @@ const Cart = () => {
         console.log('🔘 Item selection changed:', itemKey, newSelectedItems.has(itemKey))
     }
 
-    // ✅ Handle select all checkbox
+    // Handle select all checkbox
     const handleSelectAll = () => {
         if (selectedItems.size === cartItems.length) {
             // Deselect all
             setSelectedItems(new Set())
-            console.log('🔘 Deselected all items')
+            console.log('Deselected all items')
         } else {
             // Select all
             const allItemKeys = cartItems.map(item => `${item.productId}_${item.sizeIndex}`)
             setSelectedItems(new Set(allItemKeys))
-            console.log('🔘 Selected all items:', allItemKeys)
+            console.log('Selected all items:', allItemKeys)
         }
     }
 
@@ -231,9 +231,9 @@ const Cart = () => {
                 quantity: newQuantity
             })).unwrap()
 
-            console.log('✅ Cart item updated successfully')
+            console.log('Cart item updated successfully')
         } catch (error) {
-            console.error('❌ Failed to update cart item:', error)
+            console.error('Failed to update cart item:', error)
 
             if (error.includes('Authentication failed') || error.includes('Invalid token')) {
                 alert('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.')
@@ -272,9 +272,9 @@ const Cart = () => {
                 return newSet
             })
 
-            console.log('✅ Cart item removed successfully')
+            console.log('Cart item removed successfully')
         } catch (error) {
-            console.error('❌ Failed to remove cart item:', error)
+            console.error('Failed to remove cart item:', error)
 
             if (error.includes('Authentication failed') || error.includes('Invalid token')) {
                 alert('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.')
@@ -292,7 +292,7 @@ const Cart = () => {
         }
     }
 
-    // ✅ Handle remove selected items
+    // Handle remove selected items
     const handleRemoveSelected = async () => {
         const { selectedCartItems } = getSelectedTotals()
 
@@ -318,11 +318,11 @@ const Cart = () => {
             // Clear selected items
             setSelectedItems(new Set())
 
-            console.log('✅ Selected items removed successfully')
+            console.log('Selected items removed successfully')
             alert('Đã xóa các sản phẩm đã chọn!')
 
         } catch (error) {
-            console.error('❌ Failed to remove selected items:', error)
+            console.error('Failed to remove selected items:', error)
             alert(`Lỗi xóa sản phẩm: ${error}`)
         } finally {
             setIsProcessingCheckout(false)
@@ -337,9 +337,9 @@ const Cart = () => {
         try {
             await dispatch(clearCart()).unwrap()
             setSelectedItems(new Set()) // Clear selected items
-            console.log('✅ Cart cleared successfully')
+            console.log('Cart cleared successfully')
         } catch (error) {
-            console.error('❌ Failed to clear cart:', error)
+            console.error('Failed to clear cart:', error)
 
             if (error.includes('Authentication failed') || error.includes('Invalid token')) {
                 alert('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.')
@@ -351,7 +351,7 @@ const Cart = () => {
         }
     }
 
-    // ✅ Handle checkout with selected items
+    // Handle checkout with selected items
     const handleCheckout = async () => {
         const { selectedCartItems, selectedTotalAmount } = getSelectedTotals()
 
@@ -371,7 +371,7 @@ const Cart = () => {
             setIsProcessingCheckout(true)
 
             // Simulate payment processing
-            console.log('💳 Processing payment...', selectedCartItems)
+            console.log('Processing payment...', selectedCartItems)
             await new Promise(resolve => setTimeout(resolve, 2000))
 
             // Remove purchased items from cart
@@ -385,11 +385,11 @@ const Cart = () => {
             // Clear selected items
             setSelectedItems(new Set())
 
-            console.log('✅ Checkout completed successfully')
+            console.log('Checkout completed successfully')
             alert('Thanh toán thành công! Các sản phẩm đã được xóa khỏi giỏ hàng.')
 
         } catch (error) {
-            console.error('❌ Checkout failed:', error)
+            console.error('Checkout failed:', error)
             alert(`Lỗi thanh toán: ${error}`)
         } finally {
             setIsProcessingCheckout(false)
@@ -426,7 +426,7 @@ const Cart = () => {
                 <Header />
                 <div className="min-h-screen bg-gray-900 flex items-center justify-center">
                     <div className="text-center">
-                        <div className="text-red-500 text-xl mb-4">❌</div>
+                        <div className="text-red-500 text-xl mb-4"></div>
                         <p className="text-gray-300 mb-4">Lỗi tải giỏ hàng: {cartError}</p>
                         <button
                             onClick={() => dispatch(fetchCart())}
@@ -487,7 +487,7 @@ const Cart = () => {
                                     <div className="flex items-center space-x-4">
                                         <h2 className="text-xl font-semibold text-white">Sản phẩm</h2>
 
-                                        {/* ✅ Select All Checkbox */}
+                                        {/* Select All Checkbox */}
                                         <label className="flex items-center space-x-2 cursor-pointer">
                                             <input
                                                 type="checkbox"
@@ -530,10 +530,10 @@ const Cart = () => {
                                         const isUpdating = updatingItems.has(itemKey)
                                         const isSelected = selectedItems.has(itemKey)
 
-                                        // ✅ Get product info
+                                        // Get product info
                                         const productInfo = getProductInfo(item)
 
-                                        console.log(`🎨 Rendering item ${itemKey}:`, {
+                                        console.log(` Rendering item ${itemKey}:`, {
                                             productInfo,
                                             hasImage: !!productInfo.image,
                                             imageSrc: productInfo.image
@@ -545,7 +545,7 @@ const Cart = () => {
                                                 className={`flex items-center space-x-4 p-4 rounded-lg transition-colors ${isSelected ? 'bg-gray-700 border border-primary' : 'bg-gray-700'
                                                     }`}
                                             >
-                                                {/* ✅ Item Checkbox */}
+                                                {/* Item Checkbox */}
                                                 <label className="flex items-center cursor-pointer">
                                                     <input
                                                         type="checkbox"
@@ -556,7 +556,7 @@ const Cart = () => {
                                                     />
                                                 </label>
 
-                                                {/* ✅ Enhanced Product Image */}
+                                                {/* Enhanced Product Image */}
                                                 <div className="w-20 h-20 bg-gray-600 rounded-lg overflow-hidden flex-shrink-0">
                                                     {productInfo.image ? (
                                                         <img
@@ -564,7 +564,7 @@ const Cart = () => {
                                                             alt={productInfo.name}
                                                             className="w-full h-full object-cover"
                                                             onError={(e) => {
-                                                                console.error('❌ Image failed to load:', productInfo.image)
+                                                                console.error('Image failed to load:', productInfo.image)
                                                                 e.target.onerror = null // Prevent infinite loop
                                                                 e.target.src = '' // Clear src
                                                                 e.target.style.display = 'none'
@@ -573,12 +573,12 @@ const Cart = () => {
                                                                 if (fallback) fallback.style.display = 'flex'
                                                             }}
                                                             onLoad={() => {
-                                                                console.log('✅ Image loaded successfully:', productInfo.image)
+                                                                console.log('Image loaded successfully:', productInfo.image)
                                                             }}
                                                         />
                                                     ) : null}
 
-                                                    {/* ✅ Fallback placeholder */}
+                                                    {/* Fallback placeholder */}
                                                     <div
                                                         className="w-full h-full flex flex-col items-center justify-center text-gray-400 text-xs"
                                                         style={{ display: productInfo.image ? 'none' : 'flex' }}
@@ -590,7 +590,7 @@ const Cart = () => {
                                                     </div>
                                                 </div>
 
-                                                {/* ✅ Enhanced Product Info */}
+                                                {/* Enhanced Product Info */}
                                                 <div className="flex-1 min-w-0">
                                                     <h3 className="font-medium text-white truncate" title={productInfo.name}>
                                                         {productInfo.name}
@@ -600,15 +600,6 @@ const Cart = () => {
                                                         <span className="text-sm text-gray-400">
                                                             {productInfo.sizeName}
                                                         </span>
-
-                                                        {/* {productInfo.category && (
-                                                            <>
-                                                                <span className="text-gray-500">•</span>
-                                                                <span className="text-xs text-gray-500 bg-gray-600 px-2 py-1 rounded">
-                                                                    {productInfo.category}
-                                                                </span>
-                                                            </>
-                                                        )} */}
 
                                                         {productInfo.material && (
                                                             <>
@@ -620,7 +611,7 @@ const Cart = () => {
                                                         )}
                                                     </div>
 
-                                                    {/* ✅ Price with discount info */}
+                                                    {/*Price with discount info */}
                                                     <div className="mt-1">
                                                         <span className="text-primary font-medium">
                                                             {formatPrice(productInfo.finalPrice)}
@@ -639,7 +630,7 @@ const Cart = () => {
                                                     </div>
                                                 </div>
 
-                                                {/* ✅ Quantity Controls */}
+                                                {/* Quantity Controls */}
                                                 <div className="flex items-center space-x-2">
                                                     <button
                                                         onClick={() => handleQuantityUpdate(item, item.quantity - 1)}
@@ -660,7 +651,7 @@ const Cart = () => {
                                                     </button>
                                                 </div>
 
-                                                {/* ✅ Total Price */}
+                                                {/* Total Price */}
                                                 <div className="text-right min-w-0">
                                                     <p className="font-medium text-white">
                                                         {formatPrice(productInfo.finalPrice * item.quantity)}
@@ -672,7 +663,7 @@ const Cart = () => {
                                                     )}
                                                 </div>
 
-                                                {/* ✅ Remove Button */}
+                                                {/* Remove Button */}
                                                 <button
                                                     onClick={() => handleRemoveItem(item)}
                                                     disabled={isUpdating}
@@ -690,7 +681,7 @@ const Cart = () => {
                             </div>
                         </div>
 
-                        {/* ✅ Order Summary */}
+                        {/* Order Summary */}
                         <div className="lg:col-span-1">
                             <div className="bg-gray-800 rounded-lg p-6 sticky top-24">
                                 <h2 className="text-xl font-semibold text-white mb-6">Tóm tắt đơn hàng</h2>
@@ -734,7 +725,7 @@ const Cart = () => {
                                     </button>
                                 </div>
 
-                                {/* ✅ Selected Items Summary */}
+                                {/*Selected Items Summary */}
                                 {selectedItems.size > 0 && (
                                     <div className="mt-6 pt-6 border-t border-gray-600">
                                         <h3 className="text-sm font-medium text-gray-300 mb-2">Sản phẩm sẽ thanh toán:</h3>
@@ -763,7 +754,7 @@ const Cart = () => {
                                     </div>
                                 )}
 
-                                {/* ✅ User Info */}
+                                {/*User Info */}
                                 {user && (
                                     <div className="mt-6 pt-6 border-t border-gray-600">
                                         <p className="text-sm text-gray-400">Đăng nhập với</p>

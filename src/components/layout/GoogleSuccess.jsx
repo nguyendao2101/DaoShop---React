@@ -10,13 +10,13 @@ function GoogleSuccess() {
     const navigate = useNavigate()
 
     useEffect(() => {
-        console.log('🔄 GoogleSuccess component loaded')
-        console.log('📍 Current URL:', window.location.href)
+        console.log('GoogleSuccess component loaded')
+        console.log('Current URL:', window.location.href)
 
         // Get all URL parameters
         const urlParams = new URLSearchParams(window.location.search)
         const allParams = Object.fromEntries(urlParams)
-        console.log('📋 All URL params:', allParams)
+        console.log('All URL params:', allParams)
 
         const token = urlParams.get('token')
         const error = urlParams.get('error')
@@ -27,30 +27,30 @@ function GoogleSuccess() {
         })
 
         if (token) {
-            console.log('✅ Token found, processing Google callback...')
+            console.log('Token found, processing Google callback...')
 
-            // ✅ Xử lý thành công ngay lập tức
+            // Xử lý thành công ngay lập tức
             dispatch(handleGoogleCallback(urlParams))
                 .unwrap()
                 .then((result) => {
-                    console.log('✅ Google callback processed successfully:', result)
-                    console.log('🏠 Redirecting to home in 1.5s...')
+                    console.log('Google callback processed successfully:', result)
+                    console.log('Redirecting to home in 1.5s...')
 
                     setTimeout(() => {
-                        console.log('📍 Navigating to:', ROUTES.HOME)
+                        console.log('Navigating to:', ROUTES.HOME)
                         navigate({ to: ROUTES.HOME })
                     }, 1500)
                 })
                 .catch((error) => {
-                    console.error('❌ Google callback processing failed:', error)
-                    console.log('🔄 Redirecting to auth with error...')
+                    console.error('Google callback processing failed:', error)
+                    console.log('Redirecting to auth with error...')
                     navigate({ to: `${ROUTES.AUTH}?error=${encodeURIComponent(error)}` })
                 })
         } else if (error) {
-            console.error('❌ Error in URL:', error)
+            console.error('Error in URL:', error)
             navigate({ to: `${ROUTES.AUTH}?error=${encodeURIComponent(error)}` })
         } else {
-            console.error('❌ No token or error found in URL')
+            console.error('No token or error found in URL')
             navigate({ to: `${ROUTES.AUTH}?error=no_data` })
         }
     }, [dispatch, navigate])
