@@ -22,7 +22,7 @@ const Wishlist = () => {
     const dispatch = useDispatch();
     const navigate = useNavigate();
 
-    // Redux selectors
+    // ✅ All hooks at top level
     const wishlistItems = useSelector(selectWishlistItems);
     const wishlistLoading = useSelector(selectWishlistLoading);
     const wishlistError = useSelector(selectWishlistError);
@@ -30,6 +30,9 @@ const Wishlist = () => {
     const pagination = useSelector(selectWishlistPagination);
     const isClearingWishlist = useSelector(selectIsClearingWishlist);
     const { isAuthenticated, user } = useSelector((state) => state.auth);
+
+    // ✅ Get all removing states at once to avoid calling useSelector in loop
+    const removingStates = useSelector((state) => state.wishlist.removingFromWishlist);
 
     // Fetch wishlist on component mount
     useEffect(() => {
@@ -73,9 +76,9 @@ const Wishlist = () => {
 
         try {
             await dispatch(removeFromWishlist(productId)).unwrap();
-            console.log('Removed from wishlist:', productId);
+            console.log('✅ Removed from wishlist:', productId);
         } catch (error) {
-            console.error('Failed to remove from wishlist:', error);
+            console.error('❌ Failed to remove from wishlist:', error);
 
             if (error.includes('Authentication failed') || error.includes('Invalid token')) {
                 alert('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
@@ -189,7 +192,7 @@ const Wishlist = () => {
             <Header />
             <div className="min-h-screen bg-gray-900 pt-20 pb-10">
                 <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-                    {/* Header */}
+                    {/* ✅ Header */}
                     <div className="flex justify-between items-center mb-8">
                         <div>
                             <h1 className="text-3xl font-bold text-white mb-2">Danh sách yêu thích</h1>
@@ -198,7 +201,7 @@ const Wishlist = () => {
                             </p>
                         </div>
 
-                        {/* Clear all button */}
+                        {/* ✅ Clear all button */}
                         {wishlistItems.length > 0 && (
                             <button
                                 onClick={handleClearWishlist}
@@ -210,11 +213,12 @@ const Wishlist = () => {
                         )}
                     </div>
 
-                    {/* Wishlist Grid */}
+                    {/* ✅ Wishlist Grid */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                         {wishlistItems.map((item) => {
                             const product = item.product;
-                            const isRemoving = useSelector(state => selectIsRemovingFromWishlist(state, product.id));
+                            // ✅ Use removingStates instead of useSelector hook
+                            const isRemoving = removingStates[product.id] || false;
                             const firstImage = getFirstImage(product.productImg);
                             const minPrice = getMinPrice(product.sizePrice);
                             const discountedPrice = getDiscountedPrice(minPrice, product.discountPercent);
@@ -225,7 +229,7 @@ const Wishlist = () => {
                                     className={`bg-black rounded-lg overflow-hidden border border-gray-800 hover:border-primary transition-all duration-300 group relative ${isRemoving ? 'opacity-50' : ''
                                         }`}
                                 >
-                                    {/* Product Image */}
+                                    {/* ✅ Product Image */}
                                     <div
                                         className="aspect-square bg-gray-800 relative overflow-hidden cursor-pointer"
                                         onClick={() => handleProductClick(product.id)}
@@ -237,7 +241,7 @@ const Wishlist = () => {
                                             </div>
                                         )}
 
-                                        {/* Remove Button */}
+                                        {/* ✅ Remove Button */}
                                         <button
                                             onClick={(e) => {
                                                 e.stopPropagation();
@@ -283,7 +287,7 @@ const Wishlist = () => {
                                         )}
                                     </div>
 
-                                    {/* Product Info */}
+                                    {/* ✅ Product Info */}
                                     <div className="p-4">
                                         {/* Category */}
                                         <div className="text-primary text-xs font-medium mb-1">{product.category}</div>
@@ -332,7 +336,7 @@ const Wishlist = () => {
                         })}
                     </div>
 
-                    {/* Continue Shopping Button */}
+                    {/* ✅ Continue Shopping Button */}
                     <div className="text-center mt-12">
                         <button
                             onClick={handleContinueShopping}
@@ -341,14 +345,6 @@ const Wishlist = () => {
                             Tiếp tục mua sắm
                         </button>
                     </div>
-
-                    {/* User Info */}
-                    {user && (
-                        <div className="mt-8 text-center">
-                            <p className="text-sm text-gray-400">Đăng nhập với</p>
-                            <p className="font-medium text-primary">{user.userName}</p>
-                        </div>
-                    )}
                 </div>
             </div>
             <Footer />

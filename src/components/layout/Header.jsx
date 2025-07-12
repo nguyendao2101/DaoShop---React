@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from 'react-redux'
 import { ROUTES } from '../../routes/index.js'
 import { logout } from '../../store/slices/authSlice.js'
 import { fetchCart, selectCartTotalItems, selectCartLoading, selectCartError } from '../../store/slices/cartSlice.js'
+import { selectWishlistTotalItems } from '../../store/slices/wishlistSlice.js'
 import logoApp from '../../assets/images/logoApp.png'
 import SearchDialog from './SearchDialog'
 import { useNavigate } from '@tanstack/react-router'
@@ -14,6 +15,7 @@ function Header() {
     const cartTotalItems = useSelector(selectCartTotalItems)
     const cartLoading = useSelector(selectCartLoading)
     const cartError = useSelector(selectCartError)
+    const wishlistTotalItems = useSelector(selectWishlistTotalItems)
     const [isMenuOpen, setIsMenuOpen] = useState(false)
     const [isSearchOpen, setIsSearchOpen] = useState(false)
 
@@ -71,7 +73,16 @@ function Header() {
             navigate({ to: '/auth' });
         }
     };
-
+    const handleWishlistClick = () => {
+        if (isAuthenticated) {
+            console.log('Header - Navigating to wishlist page');
+            navigate({ to: '/wishlist' });
+            setIsMenuOpen(false); // Close dropdown menu
+        } else {
+            alert('Vui lòng đăng nhập để xem danh sách yêu thích');
+            navigate({ to: '/auth' });
+        }
+    };
     const handleLogout = () => {
         dispatch(logout())
         setIsMenuOpen(false)
@@ -94,7 +105,8 @@ function Header() {
         cartTotalItems,
         cartLoading,
         cartError,
-        isAuthenticated
+        isAuthenticated,
+        wishlistTotalItems
     });
 
     return (
@@ -143,6 +155,24 @@ function Header() {
                                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                                 </svg>
+                            </button>
+
+                            {/* ✅ Wishlist Button - NEW */}
+                            <button
+                                onClick={handleWishlistClick}
+                                className="text-gray-300 hover:text-primary transition-colors relative"
+                                title="Danh sách yêu thích"
+                            >
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                                </svg>
+
+                                {/* Wishlist count badge */}
+                                {wishlistTotalItems > 0 && (
+                                    <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center font-medium">
+                                        {wishlistTotalItems > 99 ? '99+' : wishlistTotalItems}
+                                    </span>
+                                )}
                             </button>
 
                             {/*Cart - CẬP NHẬT với onClick handler */}
@@ -202,9 +232,20 @@ function Header() {
                                                 <a href="#" className="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 hover:text-primary">
                                                     Đơn hàng
                                                 </a>
-                                                <a href="#" className="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 hover:text-primary">
-                                                    Yêu thích
-                                                </a>
+                                                {/* ✅ Updated wishlist link */}
+                                                <button
+                                                    onClick={handleWishlistClick}
+                                                    className="block w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 hover:text-primary"
+                                                >
+                                                    <div className="flex items-center justify-between">
+                                                        <span>Yêu thích</span>
+                                                        {wishlistTotalItems > 0 && (
+                                                            <span className="bg-red-500 text-white text-xs px-1.5 py-0.5 rounded-full">
+                                                                {wishlistTotalItems}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                </button>
                                                 <hr className="border-gray-700 my-2" />
                                                 <button
                                                     onClick={handleLogout}
@@ -236,6 +277,24 @@ function Header() {
                                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                                 </svg>
+                            </button>
+
+                            {/* ✅ Mobile Wishlist Button - NEW */}
+                            <button
+                                onClick={handleWishlistClick}
+                                className="text-gray-300 hover:text-primary transition-colors relative"
+                                title="Danh sách yêu thích"
+                            >
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                                </svg>
+
+                                {/* Wishlist count badge */}
+                                {wishlistTotalItems > 0 && (
+                                    <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs w-4 h-4 rounded-full flex items-center justify-center font-medium">
+                                        {wishlistTotalItems > 9 ? '9+' : wishlistTotalItems}
+                                    </span>
+                                )}
                             </button>
 
                             {/* Mobile Cart Button - CẬP NHẬT */}
@@ -292,6 +351,23 @@ function Header() {
                                 <a href="#contact" className="block px-3 py-2 text-gray-300 hover:text-primary font-medium">
                                     Liên hệ
                                 </a>
+
+                                {/* ✅ Add wishlist to mobile menu */}
+                                {isAuthenticated && (
+                                    <button
+                                        onClick={handleWishlistClick}
+                                        className="block w-full text-left px-3 py-2 text-gray-300 hover:text-primary font-medium"
+                                    >
+                                        <div className="flex items-center justify-between">
+                                            <span>Danh sách yêu thích</span>
+                                            {wishlistTotalItems > 0 && (
+                                                <span className="bg-red-500 text-white text-xs px-2 py-1 rounded-full">
+                                                    {wishlistTotalItems}
+                                                </span>
+                                            )}
+                                        </div>
+                                    </button>
+                                )}
 
                                 {isAuthenticated ? (
                                     <div className="border-t border-gray-700 pt-2">
