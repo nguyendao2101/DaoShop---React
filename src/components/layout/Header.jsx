@@ -5,9 +5,11 @@ import { logout } from '../../store/slices/authSlice.js'
 import { fetchCart, selectCartTotalItems, selectCartLoading, selectCartError } from '../../store/slices/cartSlice.js'
 import logoApp from '../../assets/images/logoApp.png'
 import SearchDialog from './SearchDialog'
+import { useNavigate } from '@tanstack/react-router'
 
 function Header() {
     const dispatch = useDispatch()
+    const navigate = useNavigate()
     const { user, isAuthenticated } = useSelector((state) => state.auth)
     const cartTotalItems = useSelector(selectCartTotalItems)
     const cartLoading = useSelector(selectCartLoading)
@@ -62,8 +64,11 @@ function Header() {
     // ✅ Manual refresh cart function
     const handleCartClick = () => {
         if (isAuthenticated) {
-            console.log('🛒 Header - Manual cart refresh on click');
-            dispatch(fetchCart());
+            console.log('Header - Navigating to cart page');
+            navigate({ to: '/cart' });
+        } else {
+            alert('Vui lòng đăng nhập để xem giỏ hàng');
+            navigate({ to: '/auth' });
         }
     };
 
@@ -140,7 +145,7 @@ function Header() {
                                 </svg>
                             </button>
 
-                            {/* ✅ Cart - CẬP NHẬT với onClick handler */}
+                            {/*Cart - CẬP NHẬT với onClick handler */}
                             <button
                                 onClick={handleCartClick}
                                 className="text-gray-300 hover:text-primary transition-colors relative"
@@ -150,7 +155,7 @@ function Header() {
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13v6a2 2 0 002 2h6a2 2 0 002-2v-6" />
                                 </svg>
 
-                                {/* ✅ Loading indicator */}
+                                {/* Loading indicator */}
                                 {cartLoading && (
                                     <span className="absolute -top-1 -right-1 w-3 h-3">
                                         <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
@@ -158,14 +163,14 @@ function Header() {
                                     </span>
                                 )}
 
-                                {/* ✅ Cart count badge */}
+                                {/* Cart count badge */}
                                 {!cartLoading && cartTotalItems > 0 && (
                                     <span className="absolute -top-2 -right-2 bg-primary text-black text-xs w-5 h-5 rounded-full flex items-center justify-center font-medium">
                                         {cartTotalItems > 99 ? '99+' : cartTotalItems}
                                     </span>
                                 )}
 
-                                {/* ✅ Error indicator */}
+                                {/*Error indicator */}
                                 {cartError && (
                                     <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full" title="Lỗi load giỏ hàng"></span>
                                 )}
@@ -233,7 +238,7 @@ function Header() {
                                 </svg>
                             </button>
 
-                            {/* ✅ Mobile Cart Button - CẬP NHẬT */}
+                            {/* Mobile Cart Button - CẬP NHẬT */}
                             <button
                                 onClick={handleCartClick}
                                 className="text-gray-300 hover:text-primary transition-colors relative"

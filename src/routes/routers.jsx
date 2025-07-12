@@ -10,6 +10,7 @@ import Home from '../page/Home.jsx'
 import Auth from '../page/Auth.jsx'
 import ProductDetail from '../page/ProductDetail.jsx'
 import ProductAll from '../page/ProductAll.jsx'
+import Cart from '../page/Cart.jsx'
 import Collection from '../page/Collection.jsx'
 import GoogleSuccess from '../components/layout/GoogleSuccess.jsx'
 
@@ -21,6 +22,13 @@ const rootRoute = createRootRoute({
         </>
     ),
 });
+
+const cartRoute = createRoute({
+    getParentRoute: () => rootRoute,
+    path: '/cart',
+    component: Cart,
+})
+
 
 // Home route
 const homeRoute = createRoute({
@@ -70,7 +78,8 @@ const routeTree = rootRoute.addChildren([
     productsRoute,
     googleSuccessRoute,
     productDetailRoute,
-    collectionDetailRoute
+    collectionDetailRoute,
+    cartRoute
 ]);
 
 export const router = createRouter({ routeTree })

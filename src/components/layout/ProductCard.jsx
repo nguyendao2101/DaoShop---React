@@ -102,10 +102,11 @@ const ProductCard = ({ product }) => {
                         {product.discountPercent > 0 ? (
                             <>
                                 <span className="text-lg font-bold text-primary">
-                                    {formatPrice(discountedPrice)}
+                                    {/* {formatPrice(discountedPrice)} */}
+                                    {formatPrice(minPrice)}
                                 </span>
                                 <span className="text-xs text-gray-500 line-through">
-                                    {formatPrice(minPrice)}
+                                    {formatPrice(minPrice + minPrice * product.discountPercent / 100)}
                                 </span>
                             </>
                         ) : (
