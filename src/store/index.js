@@ -3,13 +3,15 @@ import authReducer from './slices/authSlice.js'
 import productReducer from './slices/productSlice';
 import collectionReducer from './slices/collectionSlice';
 import cartReducer from './slices/cartSlice';
+import wishlistReducer from './slices/wishlistSlice';
 
 export const store = configureStore({
     reducer: {
         auth: authReducer,
         products: productReducer,
         collections: collectionReducer,
-        cart: cartReducer
+        cart: cartReducer,
+        wishlist: wishlistReducer
     },
     middleware: (getDefaultMiddleware) =>
         getDefaultMiddleware({

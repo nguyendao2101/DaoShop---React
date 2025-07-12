@@ -11,6 +11,7 @@ import Auth from '../page/Auth.jsx'
 import ProductDetail from '../page/ProductDetail.jsx'
 import ProductAll from '../page/ProductAll.jsx'
 import Cart from '../page/Cart.jsx'
+import Wishlist from '../page/Wishlist.jsx'
 import Collection from '../page/Collection.jsx'
 import GoogleSuccess from '../components/layout/GoogleSuccess.jsx'
 
@@ -22,11 +23,18 @@ const rootRoute = createRootRoute({
         </>
     ),
 });
-
+// Cart route
 const cartRoute = createRoute({
     getParentRoute: () => rootRoute,
     path: '/cart',
     component: Cart,
+})
+
+// Wishlist route
+const wishlistRoute = createRoute({
+    getParentRoute: () => rootRoute,
+    path: '/wishlist',
+    component: Wishlist,
 })
 
 
@@ -79,7 +87,8 @@ const routeTree = rootRoute.addChildren([
     googleSuccessRoute,
     productDetailRoute,
     collectionDetailRoute,
-    cartRoute
+    cartRoute,
+    wishlistRoute
 ]);
 
 export const router = createRouter({ routeTree })

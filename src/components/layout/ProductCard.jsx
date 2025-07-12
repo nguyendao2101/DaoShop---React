@@ -1,9 +1,33 @@
-// src/components/layout/ProductCard.jsx
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate } from '@tanstack/react-router';
+import { useDispatch, useSelector } from 'react-redux';
+import {
+    fetchWishlist,
+    addToWishlist,
+    removeFromWishlist,
+    selectIsProductInWishlist,
+    selectIsAddingToWishlist,
+    selectIsRemovingFromWishlist,
+    selectWishlistError
+} from '../../store/slices/wishlistSlice';
 
 const ProductCard = ({ product }) => {
     const navigate = useNavigate();
+    const dispatch = useDispatch();
+
+    // ✅ Redux selectors
+    const isInWishlist = useSelector(state => selectIsProductInWishlist(state, product.id));
+    const isAddingToWishlist = useSelector(state => selectIsAddingToWishlist(state, product.id));
+    const isRemovingFromWishlist = useSelector(state => selectIsRemovingFromWishlist(state, product.id));
+    const wishlistError = useSelector(selectWishlistError);
+    const { isAuthenticated } = useSelector(state => state.auth);
+
+    // ✅ Fetch wishlist on component mount (only once)
+    useEffect(() => {
+        if (isAuthenticated) {
+            dispatch(fetchWishlist());
+        }
+    }, [dispatch, isAuthenticated]);
 
     // Helper functions
     const getMinPrice = (sizePrice) => {
@@ -29,6 +53,31 @@ const ProductCard = ({ product }) => {
         return originalPrice * (1 - discountPercent / 100);
     };
 
+    // ✅ Handle wishlist toggle
+    const handleWishlistToggle = async (e) => {
+        e.stopPropagation(); // Prevent product click navigation
+
+        if (!isAuthenticated) {
+            alert('Vui lòng đăng nhập để thêm vào danh sách yêu thích');
+            return;
+        }
+
+        if (isAddingToWishlist || isRemovingFromWishlist) return;
+
+        try {
+            if (isInWishlist) {
+                await dispatch(removeFromWishlist(product.id)).unwrap();
+                console.log('✅ Removed from wishlist:', product.id);
+            } else {
+                await dispatch(addToWishlist(product.id)).unwrap();
+                console.log('✅ Added to wishlist:', product.id);
+            }
+        } catch (error) {
+            console.error('❌ Wishlist action failed:', error);
+            alert(`Lỗi: ${error}`);
+        }
+    };
+
     const handleProductClick = () => {
         navigate({
             to: '/product/$productId',
@@ -40,10 +89,13 @@ const ProductCard = ({ product }) => {
     const discountedPrice = getDiscountedPrice(minPrice, product.discountPercent);
     const firstImage = getFirstImage(product.productImg);
 
+    // ✅ Determine loading state
+    const isWishlistLoading = isAddingToWishlist || isRemovingFromWishlist;
+
     return (
         <div
             onClick={handleProductClick}
-            className="bg-black rounded-lg overflow-hidden border border-gray-800 hover:border-primary transition-all duration-300 group cursor-pointer"
+            className="bg-black rounded-lg overflow-hidden border border-gray-800 hover:border-primary transition-all duration-300 group cursor-pointer relative"
         >
             {/* Product Image */}
             <div className="aspect-square bg-gray-800 relative overflow-hidden">
@@ -53,6 +105,44 @@ const ProductCard = ({ product }) => {
                         -{product.discountPercent}%
                     </div>
                 )}
+
+                {/* ✅ Wishlist Heart Button */}
+                <button
+                    onClick={handleWishlistToggle}
+                    disabled={isWishlistLoading || !isAuthenticated}
+                    className={`absolute top-2 right-2 w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300 z-20 ${isInWishlist
+                        ? 'bg-red-500 text-white shadow-lg scale-110'
+                        : 'bg-black/60 text-white hover:bg-red-500 hover:text-white hover:scale-110'
+                        } ${isWishlistLoading ? 'opacity-50 cursor-not-allowed' : ''} ${!isAuthenticated ? 'opacity-70' : ''
+                        }`}
+                    title={
+                        !isAuthenticated
+                            ? 'Đăng nhập để thêm vào yêu thích'
+                            : isInWishlist
+                                ? 'Xóa khỏi danh sách yêu thích'
+                                : 'Thêm vào danh sách yêu thích'
+                    }
+                >
+                    {isWishlistLoading ? (
+                        /* ✅ Loading spinner */
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    ) : (
+                        /* ✅ Heart icon */
+                        <svg
+                            className={`w-4 h-4 transition-all duration-200 ${isInWishlist ? 'scale-110' : ''}`}
+                            fill={isInWishlist ? 'currentColor' : 'none'}
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                            strokeWidth={isInWishlist ? 0 : 2}
+                        >
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+                            />
+                        </svg>
+                    )}
+                </button>
 
                 {/* Hover Overlay */}
                 <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-blue-400/20 opacity-0 group-hover:opacity-100 transition-opacity"></div>
@@ -102,7 +192,6 @@ const ProductCard = ({ product }) => {
                         {product.discountPercent > 0 ? (
                             <>
                                 <span className="text-lg font-bold text-primary">
-                                    {/* {formatPrice(discountedPrice)} */}
                                     {formatPrice(minPrice)}
                                 </span>
                                 <span className="text-xs text-gray-500 line-through">
@@ -116,6 +205,15 @@ const ProductCard = ({ product }) => {
                         )}
                     </div>
 
+                    {/* ✅ Wishlist status indicator (optional small indicator) */}
+                    {isInWishlist && (
+                        <div className="text-red-500 text-xs font-medium flex items-center">
+                            <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                            </svg>
+                            Yêu thích
+                        </div>
+                    )}
                 </div>
 
                 {/* Total Sold */}
@@ -125,6 +223,13 @@ const ProductCard = ({ product }) => {
                     </div>
                 )}
             </div>
+
+            {/* ✅ Error indicator (if any) */}
+            {wishlistError && (
+                <div className="absolute top-0 left-0 right-0 bg-red-500/90 text-white text-xs p-1 text-center z-30">
+                    ⚠️ Lỗi wishlist
+                </div>
+            )}
         </div>
     );
 };
