@@ -4,6 +4,8 @@ import productReducer from './slices/productSlice';
 import collectionReducer from './slices/collectionSlice';
 import cartReducer from './slices/cartSlice';
 import wishlistReducer from './slices/wishlistSlice';
+import userReducer from './slices/userSlice.js';
+
 
 export const store = configureStore({
     reducer: {
@@ -11,7 +13,8 @@ export const store = configureStore({
         products: productReducer,
         collections: collectionReducer,
         cart: cartReducer,
-        wishlist: wishlistReducer
+        wishlist: wishlistReducer,
+        user: userReducer
     },
     middleware: (getDefaultMiddleware) =>
         getDefaultMiddleware({

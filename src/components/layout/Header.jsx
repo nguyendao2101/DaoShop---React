@@ -83,6 +83,16 @@ function Header() {
             navigate({ to: '/auth' });
         }
     };
+    const handleUserClick = () => {
+        if (isAuthenticated) {
+            console.log('Header - Navigating to wishlist page');
+            navigate({ to: '/user' });
+            setIsMenuOpen(false); // Close dropdown menu
+        } else {
+            alert('Vui lòng đăng nhập để xem danh sách yêu thích');
+            navigate({ to: '/auth' });
+        }
+    };
     const handleLogout = () => {
         dispatch(logout())
         setIsMenuOpen(false)
@@ -157,7 +167,7 @@ function Header() {
                                 </svg>
                             </button>
 
-                            {/* ✅ Wishlist Button - NEW */}
+                            {/* Wishlist Button*/}
                             <button
                                 onClick={handleWishlistClick}
                                 className="text-gray-300 hover:text-primary transition-colors relative"
@@ -226,13 +236,18 @@ function Header() {
                                                 <p className="font-medium text-primary">{user?.userName}</p>
                                             </div>
                                             <div className="py-2">
-                                                <a href="#" className="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 hover:text-primary">
+                                                {/* <a href="#" className="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 hover:text-primary">
                                                     Hồ sơ của tôi
-                                                </a>
+                                                </a> */}
+                                                <button
+                                                    onClick={handleUserClick}
+                                                    className="block w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 hover:text-primary"
+                                                >
+                                                    Hồ sơ của tôi
+                                                </button>
                                                 <a href="#" className="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 hover:text-primary">
                                                     Đơn hàng
                                                 </a>
-                                                {/* ✅ Updated wishlist link */}
                                                 <button
                                                     onClick={handleWishlistClick}
                                                     className="block w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 hover:text-primary"
@@ -279,7 +294,7 @@ function Header() {
                                 </svg>
                             </button>
 
-                            {/* ✅ Mobile Wishlist Button - NEW */}
+                            {/*Mobile Wishlist Button - NEW */}
                             <button
                                 onClick={handleWishlistClick}
                                 className="text-gray-300 hover:text-primary transition-colors relative"
