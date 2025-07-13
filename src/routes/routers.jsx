@@ -15,6 +15,7 @@ import Wishlist from '../page/Wishlist.jsx'
 import User from '../page/User.jsx'
 import Collection from '../page/Collection.jsx'
 import PurchaseHistory from '../page/purchaseHistory.jsx'
+import StripeResult from '../page/StripeResult.jsx'
 import GoogleSuccess from '../components/layout/GoogleSuccess.jsx'
 
 // Root route
@@ -24,6 +25,19 @@ const rootRoute = createRootRoute({
             <Outlet />
         </>
     ),
+});
+
+export const stripeResultRoute = createRoute({
+    getParentRoute: () => rootRoute,
+    path: '/payment/result/:status/:orderId',
+    component: StripeResult,
+});
+
+// Stripe route
+export const stripeResultFallbackRoute = createRoute({
+    getParentRoute: () => rootRoute,
+    path: '/payment/result',
+    component: StripeResult,
 });
 
 // User route
@@ -107,7 +121,9 @@ const routeTree = rootRoute.addChildren([
     cartRoute,
     wishlistRoute,
     userRoute,
-    purchaseHistoryRoute
+    purchaseHistoryRoute,
+    stripeResultRoute,
+    stripeResultFallbackRoute
 ]);
 
 export const router = createRouter({ routeTree })

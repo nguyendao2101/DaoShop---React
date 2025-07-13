@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { addToCart } from '../../store/slices/cartSlice';
 import { logout } from '../../store/slices/authSlice';
 import { createOrder } from '../../store/slices/purchaseHistorySlice';
+import { createCheckout } from '../../store/slices/stripeSlice';
 
 const OrderDialog = ({
     showOrderDialog,
@@ -72,18 +73,21 @@ const OrderDialog = ({
 
                 // Chuẩn bị dữ liệu đơn hàng
                 const orderData = {
-                    // Thêm các trường bắt buộc
+                    // Các trường bắt buộc
                     userId: "6870c70c1ca5164be10bb91d", // Thực tế sẽ lấy từ trạng thái người dùng
-                    orderId: `ORD-${new Date().getFullYear()}-${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`, // Tạo ID tạm thời, server sẽ tạo ID chính thức
+                    orderId: `ORD-${new Date().getFullYear()}-${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`,
                     items: [
                         {
                             productId: productIdToSend,
+                            nameProduct: product.nameProduct, // Thêm tên sản phẩm cho Stripe
                             quantity: quantity,
                             sizeIndex: sizeIndex,
-                            unitPrice: currentPrice // Bỏ các thông tin không cần thiết
+                            unitPrice: currentPrice,
+                            // Thêm hình ảnh cho Stripe
+                            productImage: images && images.length > 0 ? images[selectedImageIndex || 0] : null
                         }
                     ],
-                    totalAmount: currentPrice * quantity + 30000, // Giá sản phẩm + phí vận chuyển
+                    totalAmount: currentPrice * quantity + 30000,
                     paymentMethod: paymentMethod,
                     deliveryAddress: {
                         fullName: deliveryAddress.fullName,
@@ -99,23 +103,77 @@ const OrderDialog = ({
                     notes: deliveryAddress.notes || ""
                 };
 
-                // Thêm dòng log để debug
                 console.log("Dữ liệu đơn hàng gửi đi:", orderData);
 
-                // Tạo đơn hàng
-                const result = await dispatch(createOrder(orderData)).unwrap();
-
-                // Nếu phương thức thanh toán là Stripe, chuyển hướng đến trang thanh toán
+                // Nếu phương thức thanh toán là Stripe
                 if (paymentMethod === 'stripe') {
-                    // Chuyển đến trang thanh toán Stripe
-                    navigate({ to: '/payment', search: { orderId: result.orderId } });
+                    // 1. Tạo đơn hàng trước
+                    const orderResult = await dispatch(createOrder(orderData)).unwrap();
+                    const orderId = orderResult.orderId || orderResult._id;
+
+                    // 2. Chuẩn bị dữ liệu cho Stripe - Đảm bảo mã hóa đúng các URL và ký tự đặc biệt
+                    const stripeData = {
+                        orderId: orderId,
+                        totalAmount: orderData.totalAmount,
+                        items: orderData.items.map(item => ({
+                            productId: item.productId,
+                            // Đảm bảo tên sản phẩm không có ký tự đặc biệt hoặc xử lý nó
+                            nameProduct: item.nameProduct.replace(/[^\x00-\x7F]/g, ""),  // Chỉ giữ các ký tự ASCII
+                            quantity: item.quantity,
+                            unitPrice: item.unitPrice,
+                            // Đảm bảo URL hình ảnh được mã hóa đúng
+                            productImage: item.productImage ? encodeURI(item.productImage) : null
+                        })),
+                        shippingFee: orderData.shippingFee,
+                        discount: orderData.discount
+                    };
+
+                    // 3. Tạo phiên thanh toán Stripe
+                    console.log("Dữ liệu gửi đến Stripe:", stripeData);
+                    const checkoutResult = await dispatch(createCheckout(stripeData)).unwrap();
+                    console.log("Kết quả phản hồi từ Stripe:", checkoutResult); // Thêm log để debug
+
+                    // 4. Chuyển hướng đến trang thanh toán Stripe
+                    if (checkoutResult.data && checkoutResult.data.sessionUrl) {
+                        // Sửa từ data.url thành data.sessionUrl
+                        console.log("Đang chuyển hướng đến:", checkoutResult.data.sessionUrl);
+                        window.location.href = checkoutResult.data.sessionUrl;
+                        return; // Thoát khỏi hàm để tránh thực hiện các bước tiếp theo
+                    } else if (checkoutResult.data && checkoutResult.data.url) {
+                        // Kiểm tra trường hợp thay thế nếu API thay đổi
+                        console.log("Đang chuyển hướng đến:", checkoutResult.data.url);
+                        window.location.href = checkoutResult.data.url;
+                        return;
+                    } else if (checkoutResult.sessionUrl) {
+                        // Kiểm tra nếu dữ liệu nằm trực tiếp trong kết quả
+                        console.log("Đang chuyển hướng đến:", checkoutResult.sessionUrl);
+                        window.location.href = checkoutResult.sessionUrl;
+                        return;
+                    } else if (checkoutResult.url) {
+                        // Kiểm tra nếu url nằm trực tiếp trong kết quả
+                        console.log("Đang chuyển hướng đến:", checkoutResult.url);
+                        window.location.href = checkoutResult.url;
+                        return;
+                    } else {
+                        // Trường hợp không nhận được URL thanh toán - log thêm thông tin chi tiết
+                        console.error("Không tìm thấy URL thanh toán trong dữ liệu phản hồi:", checkoutResult);
+                        throw new Error('Không nhận được URL thanh toán từ Stripe');
+                    }
                 } else {
+                    // Xử lý các phương thức thanh toán khác
+                    const result = await dispatch(createOrder(orderData)).unwrap();
+
                     // Hiển thị thông báo thành công và chuyển đến trang chi tiết đơn hàng
                     alert('Đặt hàng thành công!');
                     navigate({ to: '/purchaseHistory' });
                 }
+
+                // Reset trạng thái
+                setShowOrderDialog(false);
+                setQuantity(1);
+                setIsCheckingOut(false);
             } else {
-                // Chỉ thêm vào giỏ hàng - giữ nguyên phần này
+                // Xử lý thêm vào giỏ hàng - giữ nguyên
                 await dispatch(addToCart({
                     productId: productIdToSend,
                     sizeIndex,
@@ -123,13 +181,12 @@ const OrderDialog = ({
                 })).unwrap();
 
                 alert(`Đã thêm ${quantity} sản phẩm vào giỏ hàng!`);
+
+                // Reset trạng thái
+                setShowOrderDialog(false);
+                setQuantity(1);
+                setIsCheckingOut(false);
             }
-
-            // Reset trạng thái
-            setShowOrderDialog(false);
-            setQuantity(1);
-            setIsCheckingOut(false);
-
         } catch (error) {
             console.error('Lỗi xác nhận đơn hàng:', error);
             const errorMessage = error?.message || error?.toString() || 'Lỗi không xác định';
