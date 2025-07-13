@@ -22,6 +22,7 @@ import {
 import { logout } from '../store/slices/authSlice';
 import Header from '../components/layout/Header';
 import Footer from '../components/layout/Footer';
+import OrderDialog from '../components/layout/OrderDialog';
 import RelatedProducts from '../components/layout/RelatedProducts';
 
 const ProductDetail = () => {
@@ -50,6 +51,11 @@ const ProductDetail = () => {
     const [selectedSize, setSelectedSize] = useState(null);
     const [quantity, setQuantity] = useState(1);
     const [showFullDescription, setShowFullDescription] = useState(false);
+
+    const [showOrderDialog, setShowOrderDialog] = useState(false);
+    const [paymentMethod, setPaymentMethod] = useState('cod');
+    const [isCheckingOut, setIsCheckingOut] = useState(false);
+    const [isBuyNowMode, setIsBuyNowMode] = useState(false);
 
     useEffect(() => {
         if (productId) {
@@ -123,10 +129,10 @@ const ProductDetail = () => {
             const sizeOptions = getSizeOptions();
             const sizeIndex = sizeOptions.findIndex(opt => opt.size === selectedSize.size);
 
-            // ✅ Sử dụng product.id thay vì product._id
+            // Sử dụng product.id thay vì product._id
             const productIdToSend = product.id || product.productId || product._id;
 
-            console.log('🛒 ProductDetail - DETAILED DEBUG:', {
+            console.log('ProductDetail - DETAILED DEBUG:', {
                 'product.id': product.id,
                 'product.productId': product.productId,
                 'product._id': product._id,
@@ -147,7 +153,7 @@ const ProductDetail = () => {
                 return;
             }
 
-            // ✅ Gửi đúng productId mà backend expect
+            // Gửi đúng productId mà backend expect
             const result = await dispatch(addToCart({
                 productId: productIdToSend,  // ← Đây là key quan trọng
                 sizeIndex,
@@ -195,49 +201,50 @@ const ProductDetail = () => {
             navigate({ to: '/auth' });
             return;
         }
+        setIsBuyNowMode(true);
+        setShowOrderDialog(true);
+        // try {
+        //     const sizeOptions = getSizeOptions();
+        //     const sizeIndex = sizeOptions.findIndex(opt => opt.size === selectedSize.size);
 
-        try {
-            const sizeOptions = getSizeOptions();
-            const sizeIndex = sizeOptions.findIndex(opt => opt.size === selectedSize.size);
+        //     // Check if user still authenticated
+        //     const token = localStorage.getItem('authToken');
+        //     if (!token) {
+        //         alert('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
+        //         dispatch(logout());
+        //         navigate({ to: '/auth' });
+        //         return;
+        //     }
 
-            // Check if user still authenticated
-            const token = localStorage.getItem('authToken');
-            if (!token) {
-                alert('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
-                dispatch(logout());
-                navigate({ to: '/auth' });
-                return;
-            }
+        //     // Add to cart first
+        //     await dispatch(addToCart({
+        //         productId: product._id,
+        //         sizeIndex,
+        //         quantity: quantity
+        //     })).unwrap();
 
-            // Add to cart first
-            await dispatch(addToCart({
-                productId: product._id,
-                sizeIndex,
-                quantity: quantity
-            })).unwrap();
+        //     // Navigate to checkout (will implement later)
+        //     alert('Sản phẩm đã được thêm vào giỏ hàng! Chức năng checkout đang phát triển.');
+        //     // navigate({ to: '/checkout' });
+        // } catch (error) {
+        //     console.error('🛒 ProductDetail - Buy now error:', error);
 
-            // Navigate to checkout (will implement later)
-            alert('Sản phẩm đã được thêm vào giỏ hàng! Chức năng checkout đang phát triển.');
-            // navigate({ to: '/checkout' });
-        } catch (error) {
-            console.error('🛒 ProductDetail - Buy now error:', error);
+        //     // ← FIXED: Safe error message handling
+        //     const errorMessage = error?.message || error?.toString() || 'Unknown error';
 
-            // ← FIXED: Safe error message handling
-            const errorMessage = error?.message || error?.toString() || 'Unknown error';
+        //     if (errorMessage.includes('Authentication failed') ||
+        //         errorMessage.includes('Invalid or expired token') ||
+        //         errorMessage.includes('Invalid token') ||
+        //         errorMessage.includes('jwt malformed')) {
 
-            if (errorMessage.includes('Authentication failed') ||
-                errorMessage.includes('Invalid or expired token') ||
-                errorMessage.includes('Invalid token') ||
-                errorMessage.includes('jwt malformed')) {
-
-                alert('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
-                localStorage.removeItem('authToken');
-                dispatch(logout());
-                navigate({ to: '/auth' });
-            } else {
-                alert(`Có lỗi xảy ra: ${errorMessage}`);
-            }
-        }
+        //         alert('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
+        //         localStorage.removeItem('authToken');
+        //         dispatch(logout());
+        //         navigate({ to: '/auth' });
+        //     } else {
+        //         alert(`Có lỗi xảy ra: ${errorMessage}`);
+        //     }
+        // }
     };
 
     const handleGoHome = () => {
@@ -594,7 +601,27 @@ const ProductDetail = () => {
                     </div>
                 </div>
             </main>
-
+            <OrderDialog
+                showOrderDialog={showOrderDialog}
+                setShowOrderDialog={setShowOrderDialog}
+                selectedSize={selectedSize}
+                product={product}
+                quantity={quantity}
+                setQuantity={setQuantity}
+                paymentMethod={paymentMethod}
+                setPaymentMethod={setPaymentMethod}
+                isBuyNowMode={isBuyNowMode}
+                isCheckingOut={isCheckingOut}
+                setIsCheckingOut={setIsCheckingOut}
+                images={images}
+                selectedImageIndex={selectedImageIndex}
+                currentPrice={currentPrice}
+                formatPrice={formatPrice}
+                handleAddToCart={handleAddToCart}
+                dispatch={dispatch}
+                navigate={navigate}
+                getSizeOptions={getSizeOptions}
+            />
             <Footer />
         </div>
     );
