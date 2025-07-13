@@ -85,11 +85,21 @@ function Header() {
     };
     const handleUserClick = () => {
         if (isAuthenticated) {
-            console.log('Header - Navigating to wishlist page');
+            console.log('Header - Navigating to user page');
             navigate({ to: '/user' });
             setIsMenuOpen(false); // Close dropdown menu
         } else {
-            alert('Vui lòng đăng nhập để xem danh sách yêu thích');
+            alert('Vui lòng đăng nhập để xem thông tin cá nhân');
+            navigate({ to: '/auth' });
+        }
+    };
+    const handlePurchaseHistoryClick = () => {
+        if (isAuthenticated) {
+            console.log('Header - Navigating to PurchaseHistory page');
+            navigate({ to: '/purchaseHistory' });
+            setIsMenuOpen(false); // Close dropdown menu
+        } else {
+            alert('Vui lòng đăng nhập để xem danh sách mua hàng');
             navigate({ to: '/auth' });
         }
     };
@@ -245,9 +255,15 @@ function Header() {
                                                 >
                                                     Hồ sơ của tôi
                                                 </button>
-                                                <a href="#" className="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 hover:text-primary">
+                                                {/* <a href="#" className="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 hover:text-primary">
                                                     Đơn hàng
-                                                </a>
+                                                </a> */}
+                                                <button
+                                                    onClick={handlePurchaseHistoryClick}
+                                                    className="block w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 hover:text-primary"
+                                                >
+                                                    Đơn hàng
+                                                </button>
                                                 <button
                                                     onClick={handleWishlistClick}
                                                     className="block w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 hover:text-primary"
