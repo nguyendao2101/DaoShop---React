@@ -16,6 +16,9 @@ import {
 import { logout } from '../store/slices/authSlice.js'
 import Header from '../components/layout/Header.jsx'
 import Footer from '../components/layout/Footer.jsx'
+import OrderDialog from '../components/layout/OrderDialog';
+import { createOrder } from '../store/slices/purchaseHistorySlice';
+import { createCheckout } from '../store/slices/stripeSlice';
 
 //API Base URL
 const API_BASE_URL = 'http://localhost:8797/api'
@@ -38,6 +41,10 @@ const Cart = () => {
     const [selectedItems, setSelectedItems] = useState(new Set())
     const [isProcessingCheckout, setIsProcessingCheckout] = useState(false)
     const [productDetails, setProductDetails] = useState(new Map())
+
+    const [showOrderDialog, setShowOrderDialog] = useState(false);
+    const [paymentMethod, setPaymentMethod] = useState('cod');
+    const [isCheckingOut, setIsCheckingOut] = useState(false);
 
     // Fetch cart on component mount
     useEffect(() => {
@@ -352,49 +359,14 @@ const Cart = () => {
     }
 
     // Handle checkout with selected items
-    const handleCheckout = async () => {
-        const { selectedCartItems, selectedTotalAmount } = getSelectedTotals()
-
+    const handleCheckout = () => {
+        const { selectedCartItems } = getSelectedTotals();
         if (selectedCartItems.length === 0) {
-            alert('Vui lòng chọn sản phẩm để thanh toán!')
-            return
+            alert('Vui lòng chọn sản phẩm để thanh toán!');
+            return;
         }
-
-        // Simulate payment process
-        const confirmPayment = window.confirm(
-            `Thanh toán ${selectedCartItems.length} sản phẩm với tổng cộng ${formatPrice(selectedTotalAmount)}?`
-        )
-
-        if (!confirmPayment) return
-
-        try {
-            setIsProcessingCheckout(true)
-
-            // Simulate payment processing
-            console.log('Processing payment...', selectedCartItems)
-            await new Promise(resolve => setTimeout(resolve, 2000))
-
-            // Remove purchased items from cart
-            for (const item of selectedCartItems) {
-                await dispatch(removeFromCart({
-                    productId: item.productId,
-                    sizeIndex: item.sizeIndex
-                })).unwrap()
-            }
-
-            // Clear selected items
-            setSelectedItems(new Set())
-
-            console.log('Checkout completed successfully')
-            alert('Thanh toán thành công! Các sản phẩm đã được xóa khỏi giỏ hàng.')
-
-        } catch (error) {
-            console.error('Checkout failed:', error)
-            alert(`Lỗi thanh toán: ${error}`)
-        } finally {
-            setIsProcessingCheckout(false)
-        }
-    }
+        setShowOrderDialog(true);
+    };
 
     // Handle continue shopping
     const handleContinueShopping = () => {
@@ -402,6 +374,18 @@ const Cart = () => {
     }
 
     const { selectedCartItems, selectedTotalItems, selectedTotalAmount } = getSelectedTotals()
+    const mappedCartItems = selectedCartItems.map(item => {
+        const info = getProductInfo(item);
+        return {
+            productId: item.productId,
+            nameProduct: info?.nameProduct || info?.name || `Sản phẩm ${item.productId}`,
+            finalPrice: info?.finalPrice || 0,
+            image: info?.image || '',
+            sizeName: info?.sizeName || '',
+            sizeIndex: item.sizeIndex,
+            quantity: item.quantity
+        };
+    });
 
     // Loading state
     if (cartLoading && !cart) {
@@ -766,6 +750,27 @@ const Cart = () => {
                     </div>
                 </div>
             </div>
+            <OrderDialog
+                showOrderDialog={showOrderDialog}
+                setShowOrderDialog={setShowOrderDialog}
+                selectedSize={null}
+                product={null}
+                quantity={1}
+                setQuantity={() => { }}
+                paymentMethod={paymentMethod}
+                setPaymentMethod={setPaymentMethod}
+                isBuyNowMode={true}
+                isCheckingOut={isCheckingOut}
+                setIsCheckingOut={setIsCheckingOut}
+                images={[]}
+                selectedImageIndex={0}
+                currentPrice={selectedTotalAmount}
+                formatPrice={formatPrice}
+                dispatch={dispatch}
+                navigate={navigate}
+                getSizeOptions={() => []}
+                cartItems={mappedCartItems}
+            />
             <Footer />
         </>
     )

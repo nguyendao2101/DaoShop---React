@@ -22,7 +22,8 @@ const OrderDialog = ({
     formatPrice,
     dispatch,
     navigate,
-    getSizeOptions
+    getSizeOptions,
+    cartItems
 }) => {
     const [deliveryAddress, setDeliveryAddress] = useState({
         fullName: "",
@@ -35,7 +36,31 @@ const OrderDialog = ({
         notes: ""
     });
     // Don't show if dialog is hidden or no size is selected
-    if (!showOrderDialog || !selectedSize) return null;
+    if (!showOrderDialog || (!selectedSize && (!cartItems || cartItems.length === 0))) return null;
+
+    // Tính tổng tiền cho nhiều sản phẩm
+    const totalAmount = cartItems && cartItems.length > 0
+        ? cartItems.reduce((sum, item) => sum + item.finalPrice * item.quantity, 0) + 30000
+        : currentPrice * quantity + 30000;
+
+    // Chuẩn bị mảng items cho đơn hàng
+    const orderItems = cartItems && cartItems.length > 0
+        ? cartItems.map(item => ({
+            productId: item.productId,
+            nameProduct: item.name || item.nameProduct || `Sản phẩm ${item.productId}`,
+            quantity: item.quantity,
+            sizeIndex: item.sizeIndex,
+            unitPrice: item.finalPrice,
+            productImage: item.image || null
+        }))
+        : [{
+            productId: product.id || product.productId || product._id,
+            nameProduct: product.nameProduct,
+            quantity: quantity,
+            sizeIndex: getSizeOptions().findIndex(opt => opt.size === selectedSize.size),
+            unitPrice: currentPrice,
+            productImage: images && images.length > 0 ? images[selectedImageIndex || 0] : null
+        }];
 
     const handlePaymentChange = (e) => {
         setPaymentMethod(e.target.value);
@@ -58,135 +83,97 @@ const OrderDialog = ({
     const handleConfirmOrder = async () => {
         setIsCheckingOut(true);
         try {
-            const sizeOptions = getSizeOptions();
-            const sizeIndex = sizeOptions.findIndex(opt => opt.size === selectedSize.size);
-            const productIdToSend = product.id || product.productId || product._id;
-
-            if (isBuyNowMode) {
-                // Validate thông tin giao hàng
-                if (!deliveryAddress.fullName || !deliveryAddress.phone || !deliveryAddress.street ||
-                    !deliveryAddress.ward || !deliveryAddress.district || !deliveryAddress.city) {
-                    alert('Vui lòng điền đầy đủ thông tin giao hàng!');
-                    setIsCheckingOut(false);
-                    return;
-                }
-
-                // Chuẩn bị dữ liệu đơn hàng
-                const orderData = {
-                    // Các trường bắt buộc
-                    userId: "6870c70c1ca5164be10bb91d", // Thực tế sẽ lấy từ trạng thái người dùng
-                    orderId: `ORD-${new Date().getFullYear()}-${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`,
-                    items: [
-                        {
-                            productId: productIdToSend,
-                            nameProduct: product.nameProduct, // Thêm tên sản phẩm cho Stripe
-                            quantity: quantity,
-                            sizeIndex: sizeIndex,
-                            unitPrice: currentPrice,
-                            // Thêm hình ảnh cho Stripe
-                            productImage: images && images.length > 0 ? images[selectedImageIndex || 0] : null
-                        }
-                    ],
-                    totalAmount: currentPrice * quantity + 30000,
-                    paymentMethod: paymentMethod,
-                    deliveryAddress: {
-                        fullName: deliveryAddress.fullName,
-                        phone: deliveryAddress.phone,
-                        street: deliveryAddress.street,
-                        ward: deliveryAddress.ward,
-                        district: deliveryAddress.district,
-                        city: deliveryAddress.city,
-                        zipCode: deliveryAddress.zipCode || ""
-                    },
-                    shippingFee: 30000,
-                    discount: 0,
-                    notes: deliveryAddress.notes || ""
-                };
-
-                console.log("Dữ liệu đơn hàng gửi đi:", orderData);
-
-                // Nếu phương thức thanh toán là Stripe
-                if (paymentMethod === 'stripe') {
-                    // 1. Tạo đơn hàng trước
-                    const orderResult = await dispatch(createOrder(orderData)).unwrap();
-                    const orderId = orderResult.orderId || orderResult._id;
-
-                    // 2. Chuẩn bị dữ liệu cho Stripe - Đảm bảo mã hóa đúng các URL và ký tự đặc biệt
-                    const stripeData = {
-                        orderId: orderId,
-                        totalAmount: orderData.totalAmount,
-                        items: orderData.items.map(item => ({
-                            productId: item.productId,
-                            // Đảm bảo tên sản phẩm không có ký tự đặc biệt hoặc xử lý nó
-                            nameProduct: item.nameProduct.replace(/[^\x00-\x7F]/g, ""),  // Chỉ giữ các ký tự ASCII
-                            quantity: item.quantity,
-                            unitPrice: item.unitPrice,
-                            // Đảm bảo URL hình ảnh được mã hóa đúng
-                            productImage: item.productImage ? encodeURI(item.productImage) : null
-                        })),
-                        shippingFee: orderData.shippingFee,
-                        discount: orderData.discount
-                    };
-
-                    // 3. Tạo phiên thanh toán Stripe
-                    console.log("Dữ liệu gửi đến Stripe:", stripeData);
-                    const checkoutResult = await dispatch(createCheckout(stripeData)).unwrap();
-                    console.log("Kết quả phản hồi từ Stripe:", checkoutResult); // Thêm log để debug
-
-                    // 4. Chuyển hướng đến trang thanh toán Stripe
-                    if (checkoutResult.data && checkoutResult.data.sessionUrl) {
-                        // Sửa từ data.url thành data.sessionUrl
-                        console.log("Đang chuyển hướng đến:", checkoutResult.data.sessionUrl);
-                        window.location.href = checkoutResult.data.sessionUrl;
-                        return; // Thoát khỏi hàm để tránh thực hiện các bước tiếp theo
-                    } else if (checkoutResult.data && checkoutResult.data.url) {
-                        // Kiểm tra trường hợp thay thế nếu API thay đổi
-                        console.log("Đang chuyển hướng đến:", checkoutResult.data.url);
-                        window.location.href = checkoutResult.data.url;
-                        return;
-                    } else if (checkoutResult.sessionUrl) {
-                        // Kiểm tra nếu dữ liệu nằm trực tiếp trong kết quả
-                        console.log("Đang chuyển hướng đến:", checkoutResult.sessionUrl);
-                        window.location.href = checkoutResult.sessionUrl;
-                        return;
-                    } else if (checkoutResult.url) {
-                        // Kiểm tra nếu url nằm trực tiếp trong kết quả
-                        console.log("Đang chuyển hướng đến:", checkoutResult.url);
-                        window.location.href = checkoutResult.url;
-                        return;
-                    } else {
-                        // Trường hợp không nhận được URL thanh toán - log thêm thông tin chi tiết
-                        console.error("Không tìm thấy URL thanh toán trong dữ liệu phản hồi:", checkoutResult);
-                        throw new Error('Không nhận được URL thanh toán từ Stripe');
-                    }
-                } else {
-                    // Xử lý các phương thức thanh toán khác
-                    const result = await dispatch(createOrder(orderData)).unwrap();
-
-                    // Hiển thị thông báo thành công và chuyển đến trang chi tiết đơn hàng
-                    alert('Đặt hàng thành công!');
-                    navigate({ to: '/purchaseHistory' });
-                }
-
-                // Reset trạng thái
-                setShowOrderDialog(false);
-                setQuantity(1);
+            // Validate thông tin giao hàng
+            if (!deliveryAddress.fullName || !deliveryAddress.phone || !deliveryAddress.street ||
+                !deliveryAddress.ward || !deliveryAddress.district || !deliveryAddress.city) {
+                alert('Vui lòng điền đầy đủ thông tin giao hàng!');
                 setIsCheckingOut(false);
-            } else {
-                // Xử lý thêm vào giỏ hàng - giữ nguyên
-                await dispatch(addToCart({
-                    productId: productIdToSend,
-                    sizeIndex,
-                    quantity: quantity
-                })).unwrap();
-
-                alert(`Đã thêm ${quantity} sản phẩm vào giỏ hàng!`);
-
-                // Reset trạng thái
-                setShowOrderDialog(false);
-                setQuantity(1);
-                setIsCheckingOut(false);
+                return;
             }
+
+            // Chuẩn bị dữ liệu đơn hàng cho nhiều sản phẩm hoặc 1 sản phẩm
+            const orderData = {
+                userId: "6870c70c1ca5164be10bb91d", // Thực tế sẽ lấy từ trạng thái người dùng
+                orderId: `ORD-${new Date().getFullYear()}-${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`,
+                items: cartItems && cartItems.length > 0
+                    ? cartItems.map(item => ({
+                        productId: item.productId,
+                        nameProduct: item.name || item.nameProduct || `Sản phẩm ${item.productId}`,
+                        quantity: item.quantity,
+                        sizeIndex: item.sizeIndex,
+                        unitPrice: item.finalPrice,
+                        productImage: item.image || null
+                    }))
+                    : [{
+                        productId: product.id || product.productId || product._id,
+                        nameProduct: product.nameProduct,
+                        quantity: quantity,
+                        sizeIndex: getSizeOptions().findIndex(opt => opt.size === selectedSize.size),
+                        unitPrice: currentPrice,
+                        productImage: images && images.length > 0 ? images[selectedImageIndex || 0] : null
+                    }],
+                totalAmount: cartItems && cartItems.length > 0
+                    ? cartItems.reduce((sum, item) => sum + item.finalPrice * item.quantity, 0) + 30000
+                    : currentPrice * quantity + 30000,
+                paymentMethod: paymentMethod,
+                deliveryAddress: {
+                    fullName: deliveryAddress.fullName,
+                    phone: deliveryAddress.phone,
+                    street: deliveryAddress.street,
+                    ward: deliveryAddress.ward,
+                    district: deliveryAddress.district,
+                    city: deliveryAddress.city,
+                    zipCode: deliveryAddress.zipCode || ""
+                },
+                shippingFee: 30000,
+                discount: 0,
+                notes: deliveryAddress.notes || ""
+            };
+
+            // Nếu phương thức thanh toán là Stripe
+            if (paymentMethod === 'stripe') {
+                const orderResult = await dispatch(createOrder(orderData)).unwrap();
+                const orderId = orderResult.orderId || orderResult._id;
+                const stripeData = {
+                    orderId: orderId,
+                    totalAmount: orderData.totalAmount,
+                    items: orderData.items.map(item => ({
+                        productId: item.productId,
+                        nameProduct: item.nameProduct.replace(/[^\x00-\x7F]/g, ""),
+                        quantity: item.quantity,
+                        unitPrice: item.unitPrice,
+                        productImage: item.productImage ? encodeURI(item.productImage) : null
+                    })),
+                    shippingFee: orderData.shippingFee,
+                    discount: orderData.discount
+                };
+                const checkoutResult = await dispatch(createCheckout(stripeData)).unwrap();
+                if (checkoutResult.data && checkoutResult.data.sessionUrl) {
+                    window.location.href = checkoutResult.data.sessionUrl;
+                    return;
+                } else if (checkoutResult.data && checkoutResult.data.url) {
+                    window.location.href = checkoutResult.data.url;
+                    return;
+                } else if (checkoutResult.sessionUrl) {
+                    window.location.href = checkoutResult.sessionUrl;
+                    return;
+                } else if (checkoutResult.url) {
+                    window.location.href = checkoutResult.url;
+                    return;
+                } else {
+                    console.error("Không tìm thấy URL thanh toán trong dữ liệu phản hồi:", checkoutResult);
+                    throw new Error('Không nhận được URL thanh toán từ Stripe');
+                }
+            } else {
+                // Các phương thức thanh toán khác
+                await dispatch(createOrder(orderData)).unwrap();
+                alert('Đặt hàng thành công!');
+                navigate({ to: '/purchaseHistory' });
+            }
+
+            setShowOrderDialog(false);
+            setQuantity(1);
+            setIsCheckingOut(false);
         } catch (error) {
             console.error('Lỗi xác nhận đơn hàng:', error);
             const errorMessage = error?.message || error?.toString() || 'Lỗi không xác định';
@@ -217,35 +204,56 @@ const OrderDialog = ({
                 </div>
 
                 {/* Product info */}
-                <div className="flex items-start space-x-4 mb-6 pb-4 border-b border-gray-700">
-                    <div className="w-20 h-20 bg-gray-800 rounded overflow-hidden flex-shrink-0">
-                        <img
-                            src={images[selectedImageIndex] || images[0]}
-                            alt={product.nameProduct}
-                            className="w-full h-full object-cover"
-                            onError={(e) => {
-                                e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjNGI1NTYzIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtc2l6ZT0iMTQiIGZpbGw9IiNmZmYiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5JbWc8L3RleHQ+PC9zdmc+';
-                            }}
-                        />
-                    </div>
-                    <div className="flex-1">
-                        <h4 className="font-medium text-white">{product.nameProduct}</h4>
-                        <div className="text-sm text-gray-400 mt-1">
-                            <p>Size: {selectedSize.size}</p>
-                            <p>Số lượng: {quantity}</p>
-                        </div>
-                        <div className="mt-2">
-                            <div className="text-primary font-bold">
-                                {formatPrice(currentPrice * quantity)}
-                            </div>
-                            {product.discountPercent > 0 && (
-                                <div className="text-xs text-green-400">
-                                    Giảm {product.discountPercent}%
+                {cartItems && cartItems.length > 0 ? (
+                    <div className="mb-6 pb-4 border-b border-gray-700">
+                        <h4 className="font-medium text-white mb-2">Sản phẩm sẽ thanh toán:</h4>
+                        <div className="space-y-2 max-h-40 overflow-y-auto">
+                            {cartItems.map((item, idx) => (
+                                <div key={idx} className="flex items-center space-x-3">
+                                    <img
+                                        src={item.image}
+                                        alt={item.name || item.nameProduct || `Sản phẩm ${item.productId}`}
+                                        className="w-10 h-10 rounded bg-gray-800 object-cover"
+                                        onError={e => { e.target.src = ''; }}
+                                    />
+                                    <div>
+                                        <div className="text-white text-sm">{item.name || item.nameProduct || `Sản phẩm ${item.productId}`}</div>
+                                        <div className="text-xs text-gray-400">Size: {item.sizeName || item.sizeIndex} • SL: {item.quantity}</div>
+                                    </div>
+                                    <div className="ml-auto text-primary font-bold text-sm">{formatPrice(item.finalPrice * item.quantity)}</div>
                                 </div>
-                            )}
+                            ))}
                         </div>
                     </div>
-                </div>
+                ) : (
+                    <div className="flex items-start space-x-4 mb-6 pb-4 border-b border-gray-700">
+                        <div className="w-20 h-20 bg-gray-800 rounded overflow-hidden flex-shrink-0">
+                            <img
+                                src={images[selectedImageIndex] || images[0]}
+                                alt={product?.nameProduct}
+                                className="w-full h-full object-cover"
+                                onError={(e) => { e.target.src = ''; }}
+                            />
+                        </div>
+                        <div className="flex-1">
+                            <h4 className="font-medium text-white">{product?.nameProduct}</h4>
+                            <div className="text-sm text-gray-400 mt-1">
+                                <p>Size: {selectedSize?.size}</p>
+                                <p>Số lượng: {quantity}</p>
+                            </div>
+                            <div className="mt-2">
+                                <div className="text-primary font-bold">
+                                    {formatPrice(currentPrice * quantity)}
+                                </div>
+                                {product?.discountPercent > 0 && (
+                                    <div className="text-xs text-green-400">
+                                        Giảm {product.discountPercent}%
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                )}
                 {isBuyNowMode && (
                     <div className="mb-6 border-t border-gray-700 pt-4">
                         <h4 className="font-medium text-white mb-3">Thông tin giao hàng:</h4>
@@ -432,7 +440,11 @@ const OrderDialog = ({
                 <div className="border-t border-gray-700 pt-4">
                     <div className="flex justify-between mb-4">
                         <span className="text-white font-medium">Tổng thanh toán:</span>
-                        <span className="text-primary font-bold">{formatPrice(currentPrice * quantity)}</span>
+                        <span className="text-primary font-bold">
+                            {cartItems && cartItems.length > 0
+                                ? formatPrice(totalAmount)
+                                : formatPrice(currentPrice * quantity)}
+                        </span>
                     </div>
 
                     <div className="flex space-x-3">
