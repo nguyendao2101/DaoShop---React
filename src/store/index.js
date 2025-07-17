@@ -7,6 +7,8 @@ import wishlistReducer from './slices/wishlistSlice';
 import userReducer from './slices/userSlice.js';
 import purchaseHistoryReducer from './slices/purchaseHistorySlice.js';
 import stripeReducer from './slices/stripeSlice.js';
+import commentSocketReducer from './slices/commentSocketSlice.js';
+
 
 export const store = configureStore({
     reducer: {
@@ -17,7 +19,8 @@ export const store = configureStore({
         wishlist: wishlistReducer,
         user: userReducer,
         purchaseHistory: purchaseHistoryReducer,
-        stripe: stripeReducer
+        stripe: stripeReducer,
+        comments: commentSocketReducer
     },
     middleware: (getDefaultMiddleware) =>
         getDefaultMiddleware({

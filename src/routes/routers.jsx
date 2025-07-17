@@ -18,6 +18,7 @@ import PurchaseHistory from '../page/purchaseHistory.jsx'
 import StripeResult from '../page/StripeResult.jsx'
 import GoogleSuccess from '../components/layout/GoogleSuccess.jsx'
 
+
 // Root route
 const rootRoute = createRootRoute({
     component: () => (
@@ -27,6 +28,7 @@ const rootRoute = createRootRoute({
     ),
 });
 
+// STRIPE route
 export const stripeResultRoute = createRoute({
     getParentRoute: () => rootRoute,
     path: '/payment/result/:status/:orderId',

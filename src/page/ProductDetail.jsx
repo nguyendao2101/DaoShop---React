@@ -24,6 +24,8 @@ import Header from '../components/layout/Header';
 import Footer from '../components/layout/Footer';
 import OrderDialog from '../components/layout/OrderDialog';
 import RelatedProducts from '../components/layout/RelatedProducts';
+import AddCommentWebSocket from '../components/layout/AddCommentWebSocket';
+import CommentWebSocket from '../components/layout/CommentWebSocket';
 
 const ProductDetail = () => {
     // TanStack Router hooks
@@ -56,6 +58,7 @@ const ProductDetail = () => {
     const [paymentMethod, setPaymentMethod] = useState('cod');
     const [isCheckingOut, setIsCheckingOut] = useState(false);
     const [isBuyNowMode, setIsBuyNowMode] = useState(false);
+    const { user } = useSelector(state => state.auth);
 
     useEffect(() => {
         if (productId) {
@@ -203,48 +206,6 @@ const ProductDetail = () => {
         }
         setIsBuyNowMode(true);
         setShowOrderDialog(true);
-        // try {
-        //     const sizeOptions = getSizeOptions();
-        //     const sizeIndex = sizeOptions.findIndex(opt => opt.size === selectedSize.size);
-
-        //     // Check if user still authenticated
-        //     const token = localStorage.getItem('authToken');
-        //     if (!token) {
-        //         alert('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
-        //         dispatch(logout());
-        //         navigate({ to: '/auth' });
-        //         return;
-        //     }
-
-        //     // Add to cart first
-        //     await dispatch(addToCart({
-        //         productId: product._id,
-        //         sizeIndex,
-        //         quantity: quantity
-        //     })).unwrap();
-
-        //     // Navigate to checkout (will implement later)
-        //     alert('Sản phẩm đã được thêm vào giỏ hàng! Chức năng checkout đang phát triển.');
-        //     // navigate({ to: '/checkout' });
-        // } catch (error) {
-        //     console.error('🛒 ProductDetail - Buy now error:', error);
-
-        //     // ← FIXED: Safe error message handling
-        //     const errorMessage = error?.message || error?.toString() || 'Unknown error';
-
-        //     if (errorMessage.includes('Authentication failed') ||
-        //         errorMessage.includes('Invalid or expired token') ||
-        //         errorMessage.includes('Invalid token') ||
-        //         errorMessage.includes('jwt malformed')) {
-
-        //         alert('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
-        //         localStorage.removeItem('authToken');
-        //         dispatch(logout());
-        //         navigate({ to: '/auth' });
-        //     } else {
-        //         alert(`Có lỗi xảy ra: ${errorMessage}`);
-        //     }
-        // }
     };
 
     const handleGoHome = () => {
@@ -565,6 +526,12 @@ const ProductDetail = () => {
                                 )}
                             </div>
                         </div>
+                    </div>
+
+                    {/* COMMENT SECTION */}
+                    <div className="max-w-4xl mx-auto mb-16">
+                        <AddCommentWebSocket productId={product.id || product.productId} user={user} />
+                        <CommentWebSocket productId={product.id || product.productId} />
                     </div>
 
                     {/* Related Products */}
