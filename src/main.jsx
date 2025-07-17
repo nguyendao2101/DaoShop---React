@@ -7,6 +7,7 @@ import { store } from './store/index.js'
 import './assets/styles/index.css'
 import reportWebVitals from './reportWebVitals.js'
 import { router } from './routes/routers.jsx'
+import Gemini from './components/layout/Gemini';
 
 const rootElement = document.getElementById('app')
 if (rootElement && !rootElement.innerHTML) {
@@ -15,6 +16,7 @@ if (rootElement && !rootElement.innerHTML) {
     <StrictMode>
       <Provider store={store}>
         <RouterProvider router={router} />
+        <Gemini />
       </Provider>
     </StrictMode>,
   )

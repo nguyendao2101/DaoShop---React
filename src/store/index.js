@@ -20,7 +20,7 @@ export const store = configureStore({
         user: userReducer,
         purchaseHistory: purchaseHistoryReducer,
         stripe: stripeReducer,
-        comments: commentSocketReducer
+        comments: commentSocketReducer,
     },
     middleware: (getDefaultMiddleware) =>
         getDefaultMiddleware({
