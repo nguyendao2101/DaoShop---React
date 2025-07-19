@@ -16,6 +16,7 @@ import User from '../page/User.jsx'
 import Collection from '../page/Collection.jsx'
 import PurchaseHistory from '../page/purchaseHistory.jsx'
 import StripeResult from '../page/StripeResult.jsx'
+import LiveStream from '../page/LiveStream.jsx'
 import GoogleSuccess from '../components/layout/GoogleSuccess.jsx'
 
 
@@ -26,6 +27,12 @@ const rootRoute = createRootRoute({
             <Outlet />
         </>
     ),
+});
+
+const liveStreamRoute = createRoute({
+    getParentRoute: () => rootRoute,
+    path: '/livestream/$livestreamId',
+    component: LiveStream,
 });
 
 // STRIPE route
@@ -125,7 +132,8 @@ const routeTree = rootRoute.addChildren([
     userRoute,
     purchaseHistoryRoute,
     stripeResultRoute,
-    stripeResultFallbackRoute
+    stripeResultFallbackRoute,
+    liveStreamRoute
 ]);
 
 export const router = createRouter({ routeTree })

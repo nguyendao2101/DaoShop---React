@@ -6,6 +6,7 @@ import { fetchCart, selectCartTotalItems, selectCartLoading, selectCartError } f
 import { selectWishlistTotalItems } from '../../store/slices/wishlistSlice.js'
 import logoApp from '../../assets/images/logoApp.png'
 import SearchDialog from './SearchDialog'
+import Livestream from '../../page/LiveStream.jsx'
 import { useNavigate } from '@tanstack/react-router'
 
 function Header() {
@@ -72,6 +73,10 @@ function Header() {
             alert('Vui lòng đăng nhập để xem giỏ hàng');
             navigate({ to: '/auth' });
         }
+    };
+    const handleLivestreamClick = () => {
+        console.log('Header - Navigating to livestream page');
+        navigate({ to: '/livestream/ACLcv33jR1I' });
     };
     const handleWishlistClick = () => {
         if (isAuthenticated) {
@@ -151,6 +156,9 @@ function Header() {
                             <a href="#" className="text-gray-300 hover:text-primary transition-colors font-medium">
                                 Trang chủ
                             </a>
+                            <button onClick={handleLivestreamClick} className="text-gray-300 hover:text-primary transition-colors font-medium bg-transparent border-none outline-none cursor-pointer">
+                                Livestream
+                            </button>
                             <a href="#products" className="text-gray-300 hover:text-primary transition-colors font-medium">
                                 Sản phẩm
                             </a>
